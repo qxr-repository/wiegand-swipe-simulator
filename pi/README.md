@@ -107,7 +107,7 @@ It works on Ubuntu 20.04, 22.04 and 24.04 (and Debian 11+). Skip steps 1–2, th
 - Load is small: one Python process using about 35 MB of RAM; under the Stress test (~12 swipes/s) it used under 1% of one CPU core in testing.
 - Logs grow about 3 MB per hour under Stress and much less at normal rates. Logs older than 60 days are deleted automatically; change `log_keep_days` in `data/config.json` (0 = keep forever).
 - Check that port 8080 is free first: `sudo ss -ltnp | grep 8080`. If it's taken, set `http_port` in `data/config.json` and restart with `sudo systemctl restart wiegand-sim`.
-- If a firewall is on: `sudo ufw allow 8080/tcp`.
+- If the ufw firewall is on (it is on Qumulex servers), `install.sh` opens the dashboard port to your local network automatically. To do it by hand: `sudo ufw allow from 192.168.1.0/24 to any port 8080 proto tcp` (use your own subnet). A Qumulex update may reset firewall rules; if the dashboard stops loading, run `bash install.sh` again.
 - On a Qumulex server, check with engineering before adding packages or Tailscale.
 - Offline-buffer and gateway-reboot tests need the simulator on a separate machine, since rebooting the server also stops the simulator.
 
