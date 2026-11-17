@@ -41,6 +41,7 @@ DEFAULT_CONFIG = {
     "pulse_us": 40,
     "interval_us": 2000,
     "reader_labels": ["Door 1 In", "Door 1 Out", "Door 2 In", "Door 2 Out"],
+    "log_keep_days": 60,            # delete CSV logs older than this (0 = keep forever)
     "feedback": {                   # automatic pass/fail from the panel's lock relays
         "enabled": False,
         "reader_inputs": [1, 1, 2, 2],   # which Uno input (A0=1 .. A3=4) shows each reader's door unlocking
@@ -679,10 +680,31 @@ JOBS = load_json(JOBS_FILE, [])
 TEST_TYPES = ("load", "sequence", "schedule_edges", "bad_frames")
 
 
+def prune_logs():
+    keep = int(CFG.get("log_keep_days") or 0)
+    if keep <= 0:
+        return
+    cutoff = time.time() - keep * 86400
+    removed = 0
+    for p in glob.glob(os.path.join(LOGDIR, "*.csv")):
+        try:
+            if os.path.getmtime(p) < cutoff:
+                os.remove(p)
+                removed += 1
+        except OSError:
+            pass
+    if removed:
+        HUB.emit("sys", f"Deleted {removed} log file(s) older than {keep} days")
+
+
 def scheduler():
     fired = set()
+    last_prune = 0
     while True:
         n = now()
+        if time.time() - last_prune > 3600:
+            last_prune = time.time()
+            prune_logs()
         for job in list(JOBS):
             if not job.get("enabled", True):
                 continue
@@ -730,12 +752,12 @@ def bad(msg, code=400):
     return jsonify({"error": msg}), code
 
 
-@app.get("/")
+@app.route("/", methods=["GET"])
 def index():
     return send_from_directory(app.static_folder, "index.html")
 
 
-@app.get("/api/status")
+@app.route("/api/status", methods=["GET"])
 def api_status():
     return jsonify({
         "host": socket.gethostname(),
@@ -745,12 +767,12 @@ def api_status():
     })
 
 
-@app.get("/api/log")
+@app.route("/api/log", methods=["GET"])
 def api_log():
     return jsonify(list(HUB.recent))
 
 
-@app.get("/api/stream")
+@app.route("/api/stream", methods=["GET"])
 def api_stream():
     q = HUB.subscribe()
 
@@ -769,7 +791,7 @@ def api_stream():
     return Response(gen(), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-@app.post("/api/run")
+@app.route("/api/run", methods=["POST"])
 def api_run():
     body = request.get_json(force=True)
     name = body.get("test")
@@ -782,7 +804,7 @@ def api_run():
     return jsonify({"ok": True})
 
 
-@app.post("/api/stop")
+@app.route("/api/stop", methods=["POST"])
 def api_stop():
     RUNNER.stop()
     return jsonify({"ok": True})
@@ -791,7 +813,7 @@ def api_stop():
 MANUAL_LOCK = threading.Lock()
 
 
-@app.post("/api/swipe")
+@app.route("/api/swipe", methods=["POST"])
 def api_swipe():
     b = request.get_json(force=True)
     try:
@@ -824,7 +846,7 @@ def api_swipe():
         return bad(str(e))
 
 
-@app.get("/api/inputs")
+@app.route("/api/inputs", methods=["GET"])
 def api_inputs():
     try:
         reply = UNO.command("IN")
@@ -833,7 +855,7 @@ def api_inputs():
         return bad(str(e))
 
 
-@app.get("/api/tests")
+@app.route("/api/tests", methods=["GET"])
 def api_tests():
     return jsonify(TESTS)
 
@@ -852,7 +874,7 @@ def validate_test(t):
     return None
 
 
-@app.put("/api/tests/<path:name>")
+@app.route("/api/tests/<path:name>", methods=["PUT"])
 def api_test_put(name):
     t = request.get_json(force=True)
     err = validate_test(t)
@@ -863,14 +885,14 @@ def api_test_put(name):
     return jsonify({"ok": True})
 
 
-@app.delete("/api/tests/<path:name>")
+@app.route("/api/tests/<path:name>", methods=["DELETE"])
 def api_test_delete(name):
     TESTS.pop(name, None)
     save_json(TESTS_FILE, TESTS)
     return jsonify({"ok": True})
 
 
-@app.post("/api/tests/reset-defaults")
+@app.route("/api/tests/reset-defaults", methods=["POST"])
 def api_tests_defaults():
     for k, v in DEFAULT_TESTS.items():
         TESTS[k] = json.loads(json.dumps(v))
@@ -878,12 +900,12 @@ def api_tests_defaults():
     return jsonify({"ok": True})
 
 
-@app.get("/api/jobs")
+@app.route("/api/jobs", methods=["GET"])
 def api_jobs():
     return jsonify(JOBS)
 
 
-@app.post("/api/jobs")
+@app.route("/api/jobs", methods=["POST"])
 def api_jobs_save():
     jobs = request.get_json(force=True)
     if not isinstance(jobs, list):
@@ -899,14 +921,14 @@ def api_jobs_save():
     return jsonify({"ok": True})
 
 
-@app.get("/api/config")
+@app.route("/api/config", methods=["GET"])
 def api_config():
     c = dict(CFG)
     c["password"] = "set" if CFG.get("password") else ""
     return jsonify(c)
 
 
-@app.post("/api/config")
+@app.route("/api/config", methods=["POST"])
 def api_config_save():
     b = request.get_json(force=True)
     if "reader_labels" in b:
@@ -929,7 +951,7 @@ def api_config_save():
     return jsonify({"ok": True})
 
 
-@app.get("/api/logs")
+@app.route("/api/logs", methods=["GET"])
 def api_logs():
     files = []
     for p in sorted(glob.glob(os.path.join(LOGDIR, "*.csv")), reverse=True)[:300]:
@@ -938,7 +960,7 @@ def api_logs():
     return jsonify(files)
 
 
-@app.get("/logs/<path:name>")
+@app.route("/logs/<path:name>", methods=["GET"])
 def download_log(name):
     if "/" in name or not name.endswith(".csv"):
         abort(404)
