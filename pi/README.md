@@ -100,6 +100,17 @@ Wire each door's lock relay (dry contact: COM and NO) between an Uno input and G
 
 Use only the relay's dry contacts, never the lock power. In **Settings**, turn on automatic pass/fail and pick which input belongs to each reader's door. Sequence and bad-frame steps that expect GRANT or DENY are then marked PASS or FAIL in the log, depending on whether the door unlocked within the wait time.
 
+## Running on an existing Ubuntu server (e.g. a lab Qumulex server)
+
+It works on Ubuntu 20.04, 22.04 and 24.04 (and Debian 11+). Skip steps 1–2, then follow steps 3–6.
+
+- Load is small: one Python process using about 35 MB of RAM; under the Stress test (~12 swipes/s) it used under 1% of one CPU core in testing.
+- Logs grow about 3 MB per hour under Stress and much less at normal rates. Logs older than 60 days are deleted automatically; change `log_keep_days` in `data/config.json` (0 = keep forever).
+- Check that port 8080 is free first: `sudo ss -ltnp | grep 8080`. If it's taken, set `http_port` in `data/config.json` and restart with `sudo systemctl restart wiegand-sim`.
+- If a firewall is on: `sudo ufw allow 8080/tcp`.
+- On a Qumulex server, check with engineering before adding packages or Tailscale.
+- Offline-buffer and gateway-reboot tests need the simulator on a separate machine, since rebooting the server also stops the simulator.
+
 ## Updating
 
 ```
