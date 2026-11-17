@@ -3,1225 +3,357 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wiegand Swipe Simulator — Config Tool</title>
+<title>Wiegand Simulator</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1d232b;--mut:#5e6875;--line:#dfe3e8;--acc:#0a66c2;--acc2:#e8f1fb;--ok:#1f7a3a;--warn:#a15c00;--bad:#b42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root{--bg:#f5f6f8;--card:#fff;--ink:#1d232b;--mut:#5e6875;--line:#dfe3e8;--acc:#0a66c2;--acc2:#e8f1fb;--ok:#1f7a3a;--warn:#a15c00;--bad:#b42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2126;--ink:#e6e9ed;--mut:#9aa4b0;--line:#30363d;--acc:#4d9fff;--acc2:#1b2a3c;--ok:#4cc46f;--warn:#e0a03a;--bad:#ff6b5e}}
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-header{padding:18px 22px 4px}
-h1{font-size:20px;margin:0 0 2px}
-header p{margin:0;color:var(--mut)}
-.tabs{display:flex;gap:6px;padding:12px 22px 0;flex-wrap:wrap}
-.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px;font:inherit;font-weight:500;cursor:pointer}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0 12px 0 0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}.dot.run{background:var(--acc);animation:p 1.2s infinite}
+@keyframes p{50%{opacity:.35}}
+.grow{flex:1}
+.wrap{display:grid;grid-template-columns:minmax(380px,560px) 1fr;gap:16px;padding:16px 18px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 13px;border-radius:7px;font:inherit;cursor:pointer}
 .tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.tabs .sub{display:block;font-size:11px;font-weight:400;opacity:.8}
-.wrap{display:grid;grid-template-columns:minmax(360px,500px) 1fr;gap:16px;padding:14px 22px 30px}
-@media(max-width:950px){.wrap{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
 .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 10px}
 label{display:block;font-weight:500;margin:8px 0 3px}
 .hint{font-size:12px;color:var(--mut);margin-top:3px}
-input[type=number],input[type=text],input[type=time],select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input,select,textarea{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=checkbox]{width:auto}
+textarea{font:12px/1.45 var(--mono);min-height:340px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
-.seg button{flex:1;border:0;background:transparent;color:var(--ink);padding:7px 6px;font:inherit;cursor:pointer;border-right:1px solid var(--line)}
-.seg button:last-child{border-right:0}
-.seg button.on{background:var(--acc);color:#fff}
-.presets{display:flex;flex-wrap:wrap;gap:8px}
-.presets button,.btn{border:1px solid var(--acc);background:var(--acc2);color:var(--acc);padding:6px 11px;border-radius:7px;font:inherit;cursor:pointer}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.btn{border:1px solid var(--acc);background:var(--acc2);color:var(--acc);padding:7px 13px;border-radius:7px;font:inherit;cursor:pointer}
 .btn.primary{background:var(--acc);color:#fff}
-.btn.small{padding:3px 9px;font-size:13px}
-.x{border:0;background:transparent;color:var(--mut);cursor:pointer;font-size:16px;padding:2px 6px}
-.x:hover{color:var(--bad)}
-.readers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.rd{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;cursor:pointer;user-select:none}
-.rd.on{border-color:var(--acc);background:var(--acc2)}
-.rd b{display:block}
-.rd span{font-size:11px;color:var(--mut)}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .hide{display:none!important}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{border:1px solid var(--line);border-radius:8px;padding:10px}
-.stat .v{font-size:20px;font-weight:600}
-.stat .k{font-size:12px;color:var(--mut)}
-.msgs div{padding:6px 9px;border-radius:6px;margin:4px 0;font-size:13px}
-.msgs .bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
-.msgs .warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
-.msgs .ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
 table{border-collapse:collapse;width:100%;font-size:13px}
-td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:middle}
+td,th{border-bottom:1px solid var(--line);padding:5px 5px;text-align:left;vertical-align:middle}
 th{color:var(--mut);font-weight:500}
-.ed td{padding:3px 3px}
+.ed td{padding:3px}
 .ed input,.ed select{padding:4px 5px;font-size:13px}
-.bits{font-family:var(--mono);font-size:13px;word-break:break-all;line-height:1.9}
-.bits .p{background:#f4c54266;border-radius:3px;padding:0 2px}
-.bits .f{background:#4d9fff33;border-radius:3px;padding:0 1px}
-.bits .c{background:#4cc46f33;border-radius:3px;padding:0 1px}
-pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;max-height:560px;font:12px/1.45 var(--mono);margin:0}
-.bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.bar .grow{flex:1}
-.check{display:flex;align-items:center;gap:7px;margin-top:10px;font-weight:500}
-.check input{width:auto}
-.mutedtxt{color:var(--mut);font-size:12px}
-.sync{display:flex;gap:10px;align-items:center;font:600 18px var(--mono);background:var(--bg);border:1px dashed var(--acc);border-radius:8px;padding:10px 12px}
-.sync span{flex:1}
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px}
-.tag.g{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
-.tag.d{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
-.tag.q{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
-.tag.n{background:var(--line);color:var(--mut)}
-ol.how{margin:6px 0 0;padding-left:20px}
-ol.how li{margin:3px 0}
+.x{border:0;background:transparent;color:var(--mut);cursor:pointer;font-size:16px}
+.x:hover{color:var(--bad)}
+.log{font:12px/1.5 var(--mono);height:calc(100vh - 220px);min-height:300px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--mut)}
+.k-sys{color:var(--mut)}.k-error,.k-fail{color:var(--bad);font-weight:600}.k-pass{color:var(--ok)}.k-start,.k-end{color:var(--acc);font-weight:600}.k-input{color:var(--warn)}
+.msg{padding:7px 10px;border-radius:6px;margin-top:10px;font-size:13px}
+.msg.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.msg.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.stat{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:6px}
+.stat b{font-size:18px;display:block}
+.inputs{display:flex;gap:8px;margin-top:6px}
+.in{border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:12px}
+.in.on{background:color-mix(in srgb,var(--ok) 18%,transparent);border-color:var(--ok)}
+code{font-family:var(--mono);font-size:12px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Wiegand Swipe Simulator — Config Tool</h1>
-  <p>Arduino Uno + ScrewShield, up to 4 simulated readers. Pick a test, set it up, then copy the generated sketch into the Arduino IDE.</p>
+  <h1>Wiegand Simulator</h1>
+  <span class="chip"><span class="dot" id="unoDot"></span><span id="unoTxt">Uno…</span></span>
+  <span class="chip"><span class="dot" id="runDot"></span><span id="runTxt">Idle</span></span>
+  <span class="grow"></span>
+  <span class="chip" id="clock">–</span>
+  <button class="btn danger" id="stopBtn" disabled>Stop test</button>
 </header>
-
-<div class="tabs" id="tabs">
-  <button data-mode="load">Load / stress<span class="sub">random swipes, set rate</span></button>
-  <button data-mode="sched">Schedule edges<span class="sub">swipes around schedule times</span></button>
-  <button data-mode="apb">Anti-passback<span class="sub">In/Out sequences</span></button>
-  <button data-mode="pin">Card + PIN<span class="sub">keypad sequences</span></button>
-</div>
 
 <div class="wrap">
 <div>
-  <!-- ================= LOAD MODE ================= -->
-  <div data-for="load">
-    <div class="card">
-      <h2>Presets</h2>
-      <div class="presets">
-        <button data-preset="larry">Larry's original</button>
-        <button data-preset="normal">Normal (1–2 s)</button>
-        <button data-preset="stress">Stress (10–50 ms)</button>
-        <button data-preset="walk">Walk every card</button>
-        <button data-preset="single">One card, all readers</button>
-      </div>
-      <div class="hint" id="presetNote">Larry's original reproduces his last saved settings: FC 185, random cards 1000–1999, random reader, fixed 500 ms.</div>
-    </div>
+  <div class="tabs" id="tabs">
+    <button data-tab="run" class="on">Run</button>
+    <button data-tab="swipe">Quick swipe</button>
+    <button data-tab="tests">Tests</button>
+    <button data-tab="sched">Schedule</button>
+    <button data-tab="logs">Logs</button>
+    <button data-tab="settings">Settings</button>
+  </div>
 
+  <!-- RUN -->
+  <section data-pane="run">
     <div class="card">
-      <h2>Swipe timing</h2>
-      <label>Time between swipes</label>
-      <div class="seg" data-seg="delayMode"><button data-v="fixed">Fixed</button><button data-v="random">Random range</button></div>
-      <div id="delayFixedBox"><label>Delay (ms)</label><input type="number" data-k="delayFixed" min="0" step="10"></div>
-      <div id="delayRandBox" class="row hide">
-        <div><label>Min (ms)</label><input type="number" data-k="delayMin" min="0" step="10"></div>
-        <div><label>Max (ms)</label><input type="number" data-k="delayMax" min="0" step="10"></div>
-      </div>
-      <div class="hint">The gap after a card finishes sending. Each 26-bit card also takes about 53 ms to send.</div>
-      <label>Stop after</label>
-      <input type="number" data-k="maxReads" min="0" step="1">
-      <div class="hint">Number of swipes, then it stops. 0 = run forever.</div>
+      <h2>Run a test</h2>
+      <label>Test</label>
+      <select id="runTest"></select>
+      <div class="hint" id="runDesc"></div>
+      <label>Stop after (minutes)</label>
+      <input type="number" id="runDur" min="0" step="1" placeholder="Leave blank to run until it finishes or you stop it">
+      <div class="btns"><button class="btn primary" id="runBtn">Start</button></div>
+      <div id="runMsg"></div>
     </div>
+    <div class="card" id="nowCard">
+      <h2>Now running</h2>
+      <div id="nowBody" class="hint">Nothing running.</div>
+    </div>
+  </section>
 
+  <!-- QUICK SWIPE -->
+  <section data-pane="swipe" class="hide">
+    <div class="card">
+      <h2>Quick swipe</h2>
+      <div class="row">
+        <div><label>Reader</label><select id="qReader"></select></div>
+        <div><label>Format</label><select id="qFmt"><option value="26">26-bit</option><option value="34">34-bit</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Facility code</label><input type="number" id="qFc" value="185"></div>
+        <div><label>Card number</label><input type="number" id="qCard" value="1020"></div>
+      </div>
+      <div class="row">
+        <div><label>PIN (optional)</label><input type="text" id="qPin" maxlength="16" placeholder="e.g. 1234"></div>
+        <div><label>PIN format</label><select id="qPinFmt"><option value="4">4-bit burst</option><option value="8">8-bit burst</option></select></div>
+      </div>
+      <div class="hint">Leave the card blank to send only a PIN.</div>
+      <div class="btns"><button class="btn primary" id="qBtn">Send</button></div>
+      <div id="qMsg"></div>
+    </div>
+    <div class="card">
+      <h2>Feedback inputs (A0–A3)</h2>
+      <div class="inputs" id="inputs"></div>
+      <div class="hint">Lit = contact closed. Wire a door's lock relay (dry contact) between an input and GND to see unlocks here and get automatic pass/fail.</div>
+    </div>
+  </section>
+
+  <!-- TESTS -->
+  <section data-pane="tests" class="hide">
+    <div class="card">
+      <h2>Saved tests</h2>
+      <div class="row">
+        <div><label>Test</label><select id="tSel"></select></div>
+        <div><label>Name</label><input type="text" id="tName"></div>
+      </div>
+      <label>Definition (JSON)</label>
+      <textarea id="tJson" spellcheck="false"></textarea>
+      <div class="btns">
+        <button class="btn primary" id="tSave">Save</button>
+        <button class="btn" id="tNew">New from this</button>
+        <button class="btn danger" id="tDel">Delete</button>
+        <span class="grow"></span>
+        <button class="btn" id="tReset">Restore built-in tests</button>
+      </div>
+      <div id="tMsg"></div>
+      <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Field reference</summary>
+        <div class="hint" style="line-height:1.6">
+        <b>load</b>: readers [1-4], reader_mode random|rr|all, card_mode random|seq|static, card_min, card_max, card, fc_mode fixed|random, fc, fc_min, fc_max, delay_min_ms, delay_max_ms, max_swipes (0 = forever), seed, format 26|34<br>
+        <b>sequence</b>: steps [{reader 1-4 (0 = wait only), fc, card (blank = PIN only), pin, wait_s, expect G|D|?, note}], repeat (0 = forever), run_gap_s, format, pin_format 4|8, key_gap_ms, card_pin_gap_ms, end_hash<br>
+        <b>schedule_edges</b>: edges [{days all|wd|we|Mon..Sun, time "HH:MM"}], cards [{fc, card, label}], window_min, every_s, card_gap_ms, reader, format<br>
+        <b>bad_frames</b>: reader, fc, card, wait_s, repeat<br>
+        Every test can have a description.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section data-pane="sched" class="hide">
+    <div class="card">
+      <h2>Scheduled runs</h2>
+      <table class="ed" id="jobs"></table>
+      <div class="btns">
+        <button class="btn" id="jAdd">+ Add</button>
+        <button class="btn primary" id="jSave">Save schedule</button>
+      </div>
+      <div class="hint">Times are the Pi's local time (shown top right). If a test is already running at a scheduled time, that run is skipped and noted in the log. Leave Minutes blank to let the test run until it finishes.</div>
+      <div id="jMsg"></div>
+    </div>
+  </section>
+
+  <!-- LOGS -->
+  <section data-pane="logs" class="hide">
+    <div class="card">
+      <h2>Log files</h2>
+      <table id="logFiles"></table>
+      <div class="hint">One CSV per test run, plus one per day for quick swipes. Open in Excel and compare with the Qumulex event log.</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section data-pane="settings" class="hide">
     <div class="card">
       <h2>Readers</h2>
-      <div class="readers" id="readers"></div>
-      <label>Which reader gets each swipe</label>
-      <div class="seg" data-seg="readerMode"><button data-v="random">Random</button><button data-v="rr">Round robin</button><button data-v="all">Same card to all</button></div>
-      <div class="hint" id="readerHint"></div>
-    </div>
-
-    <div class="card">
-      <h2>Cards</h2>
-      <label>Card number</label>
-      <div class="seg" data-seg="cardMode"><button data-v="random">Random</button><button data-v="seq">Sequential</button><button data-v="static">Single card</button></div>
-      <div id="cardRangeBox" class="row">
-        <div><label>From</label><input type="number" data-k="cardMin" min="0" max="65535"></div>
-        <div><label>To (inclusive)</label><input type="number" data-k="cardMax" min="0" max="65535"></div>
-      </div>
-      <div id="cardStaticBox" class="hide"><label>Card number</label><input type="number" data-k="cardStatic" min="0" max="65535"></div>
-      <label>Facility code</label>
-      <div class="seg" data-seg="fcMode"><button data-v="fixed">Fixed</button><button data-v="random">Random range</button></div>
-      <div id="fcFixedBox"><label>Facility code</label><input type="number" data-k="fcFixed" min="0"></div>
-      <div id="fcRandBox" class="row hide">
-        <div><label>From</label><input type="number" data-k="fcMin" min="0"></div>
-        <div><label>To (inclusive)</label><input type="number" data-k="fcMax" min="0"></div>
-      </div>
-      <label>Random seed</label><input type="number" data-k="seed" min="0">
-      <div class="hint">With a fixed seed the same sequence plays after every reset, so you can repeat a run and compare logs. 0 = different every time.</div>
-    </div>
-  </div>
-
-  <!-- ================= SCHEDULE MODE ================= -->
-  <div data-for="sched">
-    <div class="card">
-      <h2>How it works</h2>
-      <ol class="how">
-        <li>Upload the sketch, then open the Serial Monitor (line ending: <b>Newline</b>).</li>
-        <li>Copy the clock line on the right and send it. The Uno now knows the day and time.</li>
-        <li>Around each schedule time, it swipes every test card on a fixed beat, before and after the change.</li>
-        <li>In Qumulex, check that each Group's result flips at the right minute.</li>
-      </ol>
-      <div class="hint">The Uno has no clock of its own, and opening the Serial Monitor resets it, so always send the clock line after opening it. Its timing can drift several seconds an hour; re-send the clock line shortly before an important edge. Daylight saving changes aren't tracked; re-send after one.</div>
-    </div>
-
-    <div class="card">
-      <h2>Schedule times to test</h2>
-      <table class="ed" id="edgeTable"></table>
-      <button class="btn small" id="addEdge" style="margin-top:8px">+ Add time</button>
-      <div class="hint">Enter the start and end times of the schedules in your Qumulex Groups.</div>
-    </div>
-
-    <div class="card">
-      <h2>Test cards</h2>
-      <table class="ed" id="schedCardTable"></table>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn small" id="addSchedCard">+ Add card</button>
-        <button class="btn small" id="schedDbCards">Use one card per test DB group</button>
-      </div>
-      <div class="hint">Pick one card from each Group so you can see every Group change at once.</div>
-    </div>
-
-    <div class="card">
-      <h2>Timing</h2>
+      <div class="row" id="labels"></div>
+      <h2 style="margin-top:16px">Wiegand timing</h2>
       <div class="row">
-        <div><label>Window either side (min)</label><input type="number" data-k="sched.windowMin" min="0" max="120"></div>
-        <div><label>Swipe every (s)</label><input type="number" data-k="sched.everySec" min="1"></div>
+        <div><label>Pulse width (µs)</label><input type="number" id="sPulse"></div>
+        <div><label>Bit interval (µs)</label><input type="number" id="sInt"></div>
       </div>
-      <div class="row">
-        <div><label>Gap between cards (ms)</label><input type="number" data-k="sched.cardGapMs" min="100" step="100"></div>
-        <div><label>Reader</label><select data-k="sched.reader"></select></div>
-      </div>
-      <div class="hint">Example: a 2 min window and every 15 s gives 17 rounds per edge, from 2:00 before to 2:00 after.</div>
+      <h2 style="margin-top:16px">Automatic pass/fail</h2>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fbOn"> Use the feedback inputs to judge expected GRANT/DENY steps</label>
+      <label>Input that shows each reader's door unlocking</label>
+      <div class="row4" id="fbMap"></div>
+      <label>Wait for unlock (ms)</label><input type="number" id="fbWin">
+      <div class="btns"><button class="btn primary" id="sSave">Save settings</button></div>
+      <div id="sMsg"></div>
     </div>
-  </div>
-
-  <!-- ================= SEQUENCE MODES (APB / PIN) ================= -->
-  <div data-for="apb pin">
-    <div class="card">
-      <h2>Templates</h2>
-      <div class="presets" id="seqTemplates"></div>
-      <div class="hint" id="seqTemplateNote"></div>
-    </div>
-
-    <div class="card">
-      <h2>Steps</h2>
-      <div style="overflow-x:auto"><table class="ed" id="stepTable"></table></div>
-      <button class="btn small" id="addStep" style="margin-top:8px">+ Add step</button>
-      <div class="hint">Leave Card blank to send only a PIN. Set Reader to "Wait only" to pause without swiping (for example, to wait out a timed anti-passback). "Expect" is printed in the log so you can compare it with Qumulex.</div>
-    </div>
-
-    <div class="card">
-      <h2>Reader labels</h2>
-      <div class="row" id="labelInputs"></div>
-      <div class="hint">How the readers are mapped to doors on the panel. Check against the panel's door/reader assignment in Qumulex.</div>
-    </div>
-
-    <div class="card" data-for="pin">
-      <h2>Keypad (PIN) output</h2>
-      <label>PIN key format</label>
-      <div class="seg" data-seg="seq.pinFmt"><button data-v="4">4-bit burst</button><button data-v="8">8-bit burst</button></div>
-      <div class="hint">Each key is sent as its own short Wiegand burst. Set the panel/door keypad format to match. 8-bit sends the key's complement first, then the key.</div>
-      <div class="row">
-        <div><label>Card → first key (ms)</label><input type="number" data-k="seq.cardPinGapMs" min="0" step="100"></div>
-        <div><label>Between keys (ms)</label><input type="number" data-k="seq.keyGapMs" min="20" step="50"></div>
-      </div>
-      <label class="check"><input type="checkbox" data-k="seq.endHash"> End each PIN with #</label>
-    </div>
-
-    <div class="card">
-      <h2>Running</h2>
-      <label>Start</label>
-      <div class="seg" data-seg="seq.start"><button data-v="go">Wait for "g" in Serial Monitor</button><button data-v="auto">Automatically</button></div>
-      <div class="row">
-        <div><label>Run the sequence</label><input type="number" data-k="seq.repeat" min="0"><div class="hint">times (0 = forever)</div></div>
-        <div id="runGapBox"><label>Gap between runs (s)</label><input type="number" data-k="seq.runGapSec" min="0"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SHARED ================= -->
-  <div class="card">
-    <h2>Format and timing</h2>
-    <label>Card format</label>
-    <div class="seg" data-seg="fmt"><button data-v="26">26-bit (H10301)</button><button data-v="34">34-bit (16/16)</button></div>
-    <div class="row">
-      <div><label>Pulse width (µs)</label><input type="number" data-k="pulse" min="20" max="200"></div>
-      <div><label>Bit interval (µs)</label><input type="number" data-k="interval" min="200" max="16000" step="100"></div>
-    </div>
-    <div class="hint">Larry used 40 µs pulses, 2000 µs apart. Typical Wiegand is 20–100 µs pulses, 1–2 ms apart.</div>
-    <div class="row">
-      <div><label>Serial baud</label>
-        <select data-k="baud"><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option>115200</option></select></div>
-      <div><label>Serial log</label>
-        <div class="seg" data-seg="log"><button data-v="0">Off</button><button data-v="1">Basic</button><button data-v="2">Verbose</button></div></div>
-    </div>
-    <div class="hint">Verbose adds the raw bits of each frame. Schedule and sequence tests always log, since the log is the result.</div>
-  </div>
+  </section>
 </div>
 
 <div>
-  <div class="card" data-for="load">
-    <h2>What this will do</h2>
-    <div class="stats">
-      <div class="stat"><div class="v" id="sRate">–</div><div class="k">swipes per second (avg)</div></div>
-      <div class="stat"><div class="v" id="sPer">–</div><div class="k">per reader per minute</div></div>
-      <div class="stat"><div class="v" id="sRun">–</div><div class="k">run length</div></div>
-    </div>
-  </div>
-
-  <div class="card" data-for="sched">
-    <h2>Clock line — send this in the Serial Monitor</h2>
-    <div class="sync"><span id="syncLine">T Mon 00:00:00</span><button class="btn primary" id="copySync">Copy</button></div>
-    <div class="hint">Taken from this computer's clock and updated every second. Paste and send within a couple of seconds of copying. Format: <code>T Fri 16:55:00</code>, or <code>T 16:55:00</code> to keep the day.</div>
-    <h2 style="margin-top:16px">Plan</h2>
-    <div id="schedPlan"></div>
-  </div>
-
-  <div class="card" data-for="apb pin">
-    <h2>Plan</h2>
-    <div id="seqPlan"></div>
-  </div>
-
   <div class="card">
-    <div class="msgs" id="msgs"></div>
-  </div>
-
-  <div class="card">
-    <h2>Wiring</h2>
-    <table id="wiring"></table>
-    <div class="hint">Tie Uno GND to the panel's reader ground. Uno pins drive 5 V/0 V directly. Check the panel's D0/D1 idle voltage first; if it's above 5 V, add a buffer.</div>
-  </div>
-
-  <div class="card">
-    <h2>Sample frame</h2>
-    <div class="mutedtxt" id="frameLabel"></div>
-    <div class="bits" id="frameBits"></div>
-    <div class="hint"><span class="bits"><span class="p">parity</span> <span class="f">facility</span> <span class="c">card</span></span> · sent left to right, 0 on D0, 1 on D1</div>
-    <div id="pinFrame" class="hint"></div>
-  </div>
-
-  <div class="card" data-for="load">
-    <h2>Against Larry's test database</h2>
-    <div id="dbBox"></div>
-  </div>
-
-  <div class="card">
-    <div class="bar"><h2 class="grow" style="margin:0">Generated sketch</h2>
-      <button class="btn primary" id="copyBtn">Copy sketch</button></div>
-    <div class="hint" style="margin:-2px 0 8px">Paste into a new Arduino IDE sketch, board = Arduino Uno, then upload.</div>
-    <pre id="code"></pre>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 style="margin:0" class="grow">Live log</h2>
+      <label style="display:flex;gap:6px;align-items:center;margin:0;font-weight:400;font-size:13px"><input type="checkbox" id="autoScroll" checked> Follow</label>
+      <button class="btn" id="clearLog">Clear view</button></div>
+    <div class="log" id="log"></div>
   </div>
 </div>
 </div>
 
 <script>
-/* ---------------------------------------------------------------- state */
-const PRESETS={
-  larry:{note:"Larry's last saved settings: FC 185, random cards 1000–1999, random reader R1–R4, fixed 500 ms, seed 9956. Should replay the same card/reader sequence as his sketch (reasoned from the code; not yet confirmed on hardware).",
-    delayMode:"fixed",delayFixed:500,delayMin:1000,delayMax:2000,maxReads:0,readers:[1,1,1,1],readerMode:"random",cardMode:"random",cardMin:1000,cardMax:1999,cardStatic:1000,fcMode:"fixed",fcFixed:185,fcMin:0,fcMax:255,seed:9956,baud:38400,log:"1"},
-  normal:{note:"A realistic door: one swipe every 1–2 s on a random reader.",
-    delayMode:"random",delayFixed:500,delayMin:1000,delayMax:2000,maxReads:0,readers:[1,1,1,1],readerMode:"random",cardMode:"random",cardMin:1000,cardMax:2049,cardStatic:1000,fcMode:"fixed",fcFixed:185,fcMin:0,fcMax:255,seed:9956,baud:38400,log:"1"},
-  stress:{note:"Larry's stress timing: 10–50 ms between swipes, about 12 swipes/s. Tests the panel's event buffer and upload to the server. Switch logging off if you see the rate drop.",
-    delayMode:"random",delayFixed:500,delayMin:10,delayMax:50,maxReads:0,readers:[1,1,1,1],readerMode:"random",cardMode:"random",cardMin:1000,cardMax:2049,cardStatic:1000,fcMode:"fixed",fcFixed:185,fcMin:0,fcMax:255,seed:9956,baud:115200,log:"1"},
-  walk:{note:"Sends every card from 1000 to 2049 once, in order, round robin across readers, then stops. Good for checking each user's result one by one.",
-    delayMode:"fixed",delayFixed:1000,delayMin:1000,delayMax:2000,maxReads:1050,readers:[1,1,1,1],readerMode:"rr",cardMode:"seq",cardMin:1000,cardMax:2049,cardStatic:1000,fcMode:"fixed",fcFixed:185,fcMin:0,fcMax:255,seed:9956,baud:38400,log:"1"},
-  single:{note:"One card (185-1000), sent to each reader in turn every 1.5 s. Good for checking wiring and door/reader mapping.",
-    delayMode:"fixed",delayFixed:1500,delayMin:1000,delayMax:2000,maxReads:0,readers:[1,1,1,1],readerMode:"all",cardMode:"static",cardMin:1000,cardMax:2049,cardStatic:1000,fcMode:"fixed",fcFixed:185,fcMin:0,fcMax:255,seed:9956,baud:38400,log:"1"}
-};
-const DB_CARDS=[[185,1020,"M-F 8-5"],[185,1500,"M-F ALT"],[185,1751,"WEEKEND"],[185,1960,"Master"],[185,1975,"Unauthorized"]];
-const SEQ_TEMPLATES={
-  apb:{
-    basic:{name:"Single door In/Out",note:"One card through Door 1: entry, repeat entry, exit, repeat exit, re-entry. With hard anti-passback the repeats should be denied.",
-      steps:[
-        {r:0,fc:185,card:1020,pin:"",wait:3,exp:"G",note:"First entry"},
-        {r:0,fc:185,card:1020,pin:"",wait:3,exp:"D",note:"Entry again: APB"},
-        {r:1,fc:185,card:1020,pin:"",wait:3,exp:"G",note:"Exit"},
-        {r:1,fc:185,card:1020,pin:"",wait:3,exp:"D",note:"Exit again: APB"},
-        {r:0,fc:185,card:1020,pin:"",wait:3,exp:"G",note:"Re-entry"}]},
-    multi:{name:"Two doors (area/global)",note:"Enters at Door 1, then tries to enter at Door 2. Denied if the two doors share an anti-passback area; granted if each door is separate.",
-      steps:[
-        {r:0,fc:185,card:1021,pin:"",wait:3,exp:"G",note:"Enter Door 1"},
-        {r:2,fc:185,card:1021,pin:"",wait:3,exp:"?",note:"Enter Door 2: D if shared area"},
-        {r:3,fc:185,card:1021,pin:"",wait:3,exp:"G",note:"Exit Door 2"},
-        {r:0,fc:185,card:1021,pin:"",wait:3,exp:"?",note:"Enter Door 1 after D2 exit"}]},
-    timed:{name:"Timed anti-passback",note:"Enters, tries again at once (denied), waits out the anti-passback time, then tries again (granted). Set the wait step to just over the timeout configured in Qumulex.",
-      steps:[
-        {r:0,fc:185,card:1022,pin:"",wait:3,exp:"G",note:"First entry"},
-        {r:0,fc:185,card:1022,pin:"",wait:3,exp:"D",note:"Entry again: within timeout"},
-        {r:255,fc:185,card:"",pin:"",wait:65,exp:"-",note:"Wait out APB timeout"},
-        {r:0,fc:185,card:1022,pin:"",wait:3,exp:"G",note:"Entry after timeout"}]},
-    mix:{name:"Several cards at once",note:"Three cards entering and leaving in an interleaved order, to check that the panel tracks each card's state separately.",
-      steps:[
-        {r:0,fc:185,card:1030,pin:"",wait:2,exp:"G",note:"A in"},
-        {r:0,fc:185,card:1031,pin:"",wait:2,exp:"G",note:"B in"},
-        {r:1,fc:185,card:1030,pin:"",wait:2,exp:"G",note:"A out"},
-        {r:0,fc:185,card:1031,pin:"",wait:2,exp:"D",note:"B in again: APB"},
-        {r:0,fc:185,card:1032,pin:"",wait:2,exp:"G",note:"C in"},
-        {r:1,fc:185,card:1032,pin:"",wait:2,exp:"G",note:"C out"},
-        {r:1,fc:185,card:1031,pin:"",wait:2,exp:"G",note:"B out"},
-        {r:1,fc:185,card:1030,pin:"",wait:2,exp:"D",note:"A out again: APB"}]}
-  },
-  pin:{
-    basic:{name:"Card + PIN basics",note:"Correct PIN, wrong PIN, card with no PIN. Add PIN 1234 to card 185-1020 in Qumulex by hand (PINs aren't imported) and set Door 1 to card + PIN.",
-      steps:[
-        {r:0,fc:185,card:1020,pin:"1234",wait:4,exp:"G",note:"Correct PIN"},
-        {r:0,fc:185,card:1020,pin:"9999",wait:4,exp:"D",note:"Wrong PIN"},
-        {r:0,fc:185,card:1020,pin:"",wait:20,exp:"D",note:"Card only: should time out"},
-        {r:0,fc:185,card:1020,pin:"1234",wait:4,exp:"G",note:"Correct PIN again"}]},
-    pinonly:{name:"PIN only",note:"PIN with no card. Granted only if the door allows PIN-only entry.",
-      steps:[
-        {r:0,fc:185,card:"",pin:"1234",wait:4,exp:"?",note:"PIN only: G if PIN-only door"},
-        {r:0,fc:185,card:"",pin:"0000",wait:4,exp:"D",note:"Unknown PIN"}]},
-    lockout:{name:"Wrong PIN lockout",note:"Three wrong PINs, then the right one. Denied if the system locks out after repeated failures.",
-      steps:[
-        {r:0,fc:185,card:1020,pin:"1111",wait:4,exp:"D",note:"Wrong PIN 1"},
-        {r:0,fc:185,card:1020,pin:"2222",wait:4,exp:"D",note:"Wrong PIN 2"},
-        {r:0,fc:185,card:1020,pin:"3333",wait:4,exp:"D",note:"Wrong PIN 3"},
-        {r:0,fc:185,card:1020,pin:"1234",wait:4,exp:"?",note:"Right PIN: D if locked out"}]},
-    duress:{name:"Duress PIN",note:"Sends the duress PIN. Should grant and raise a duress alarm. Set the duress PIN to match how Qumulex defines it.",
-      steps:[
-        {r:0,fc:185,card:1020,pin:"1235",wait:4,exp:"?",note:"Duress: G + alarm"}]}
-  }
-};
-const DEFAULTS={mode:"load",fmt:"26",pulse:40,interval:2000,baud:38400,log:"1",
-  ...JSON.parse(JSON.stringify(PRESETS.larry)),
-  sched:{edges:[{day:"wd",time:"08:00"},{day:"wd",time:"17:00"}],cards:DB_CARDS.map(c=>({fc:c[0],card:c[1],label:c[2]})),windowMin:2,everySec:15,cardGapMs:1500,reader:0},
-  seq:{labels:["Door 1 In","Door 1 Out","Door 2 In","Door 2 Out"],pinFmt:"4",cardPinGapMs:1000,keyGapMs:300,endHash:false,start:"go",repeat:1,runGapSec:10,
-       apb:JSON.parse(JSON.stringify(SEQ_TEMPLATES.apb.basic.steps)),pin:JSON.parse(JSON.stringify(SEQ_TEMPLATES.pin.basic.steps))}
-};
-delete DEFAULTS.note;
-let S=JSON.parse(JSON.stringify(DEFAULTS));
-try{const saved=JSON.parse(localStorage.getItem('wiegandCfg2')||'null'); if(saved){S=Object.assign(S,saved);S.sched=Object.assign(JSON.parse(JSON.stringify(DEFAULTS.sched)),saved.sched||{});S.seq=Object.assign(JSON.parse(JSON.stringify(DEFAULTS.seq)),saved.seq||{});}}catch(e){}
-
 const $=id=>document.getElementById(id);
-const PINS=[[2,3],[4,5],[6,7],[8,9]];
-const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const DAYOPTS=[["all","Every day"],["wd","Mon–Fri"],["we","Sat–Sun"],...DAYS.map((d,i)=>[String(i),d])];
-const getK=k=>k.split('.').reduce((o,p)=>o[p],S);
-const setK=(k,v)=>{const p=k.split('.');const last=p.pop();p.reduce((o,q)=>o[q],S)[last]=v;};
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const cstr=s=>String(s).replace(/[\\"]/g,'').replace(/[^\x20-\x7e]/g,'');
-const pad2=n=>String(n).padStart(2,'0');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let TESTS={},CFG={},JOBS=[];
+const DAYS=[["all","Every day"],["wd","Mon–Fri"],["we","Sat–Sun"],["Mon","Mon"],["Tue","Tue"],["Wed","Wed"],["Thu","Thu"],["Fri","Fri"],["Sat","Sat"],["Sun","Sun"]];
 
-/* ---------------------------------------------------------------- inputs */
-document.querySelectorAll('[data-k]').forEach(el=>{
-  const k=el.dataset.k;
-  const h=()=>{let v;if(el.type==='checkbox')v=el.checked;else if(el.type==='number'||k==='baud'||k==='sched.reader')v=el.value===''?0:Number(el.value);else v=el.value;setK(k,v);update(false);};
-  el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox'?'change':'input',h);
+async function api(path,opt={}){
+  const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opt});
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok)throw new Error(j.error||r.statusText);
+  return j;
+}
+function msg(el,text,ok=true){$(el).innerHTML=`<div class="msg ${ok?'ok':'bad'}">${esc(text)}</div>`;setTimeout(()=>{$(el).innerHTML='';},6000);}
+
+/* tabs */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('[data-pane]').forEach(p=>p.classList.toggle('hide',p.dataset.pane!==b.dataset.tab));
+  if(b.dataset.tab==='logs')loadLogFiles();
 });
-document.querySelectorAll('.seg').forEach(seg=>seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{setK(seg.dataset.seg,b.dataset.v);update();}));
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=JSON.parse(JSON.stringify(PRESETS[b.dataset.preset]));$('presetNote').textContent=p.note;delete p.note;Object.assign(S,p);update();});
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;update();});
 
-function syncInputs(){
-  document.querySelectorAll('[data-k]').forEach(el=>{const v=getK(el.dataset.k);if(el.type==='checkbox')el.checked=!!v;else el.value=v;});
-  document.querySelectorAll('.seg').forEach(seg=>{const v=String(getK(seg.dataset.seg));seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));});
-  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.mode===S.mode));
-  document.querySelectorAll('[data-for]').forEach(el=>el.classList.toggle('hide',!el.dataset.for.split(' ').includes(S.mode)));
+/* status */
+function fmtTime(s){return s?new Date(s).toLocaleTimeString():''}
+async function refreshStatus(){
+  try{
+    const s=await api('/api/status');
+    $('clock').textContent=`${s.host} · ${new Date(s.time).toLocaleString([], {weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    $('unoDot').className='dot '+(s.uno.connected?'on':'off');
+    $('unoTxt').textContent=s.uno.connected?`Uno connected (fw ${s.uno.fw})`:`Uno: ${s.uno.status}`;
+    const r=s.runner;
+    $('runDot').className='dot '+(r.running?'run':'');
+    $('runTxt').textContent=r.running?`Running: ${r.test}`:'Idle';
+    $('stopBtn').disabled=!r.running;
+    $('nowBody').innerHTML=r.running?`<b>${esc(r.test)}</b> (${esc(r.type)}) · started ${fmtTime(r.started)} by ${esc(r.source)}${r.until?` · stops at ${fmtTime(r.until)}`:''}
+      <div class="stat"><span><b>${r.swipes}</b>swipes</span>${(r.passed||r.failed)?`<span><b style="color:var(--ok)">${r.passed}</b>pass</span><span><b style="color:var(--bad)">${r.failed}</b>fail</span>`:''}</div>`:'Nothing running.';
+    $('inputs').innerHTML=s.uno.inputs.map((v,i)=>`<span class="in ${v?'on':''}">A${i} · ${v?'closed':'open'}</span>`).join('');
+  }catch(e){$('unoTxt').textContent='Pi not reachable';$('unoDot').className='dot off';}
+}
+setInterval(refreshStatus,2000);
+$('stopBtn').onclick=async()=>{await api('/api/stop',{method:'POST'});refreshStatus();};
+
+/* live log */
+function addLog(rec){
+  const d=document.createElement('div');
+  d.className='k-'+rec.kind;
+  d.innerHTML=`<span class="t">${esc(rec.t.slice(11,23))}</span> ${esc(rec.text)}`;
+  const L=$('log');L.appendChild(d);
+  while(L.childNodes.length>1500)L.removeChild(L.firstChild);
+  if($('autoScroll').checked)L.scrollTop=L.scrollHeight;
+}
+$('clearLog').onclick=()=>{$('log').innerHTML='';};
+async function startStream(){
+  try{(await api('/api/log')).forEach(addLog);}catch(e){}
+  const es=new EventSource('/api/stream');
+  es.onmessage=e=>{addLog(JSON.parse(e.data));if(['start','end'].includes(JSON.parse(e.data).kind))refreshStatus();};
 }
 
-/* ---------------------------------------------------------------- editors */
-function readerOpts(sel,withWait){
-  let o=PINS.map((p,i)=>`<option value="${i}" ${+sel===i?'selected':''}>R${i+1} · ${esc(S.seq.labels[i])}</option>`).join('');
-  if(withWait)o+=`<option value="255" ${+sel===255?'selected':''}>Wait only</option>`;
-  return o;
+/* tests */
+function fillTestSelects(){
+  const names=Object.keys(TESTS);
+  const opts=names.map(n=>`<option>${esc(n)}</option>`).join('');
+  const keepRun=$('runTest').value, keepT=$('tSel').value;
+  $('runTest').innerHTML=opts;$('tSel').innerHTML=opts;
+  if(names.includes(keepRun))$('runTest').value=keepRun;
+  if(names.includes(keepT))$('tSel').value=keepT;
+  showRunDesc();showTest();
 }
-function buildReaders(){
-  $('readers').innerHTML=PINS.map((p,i)=>`<div class="rd ${S.readers[i]?'on':''}" data-r="${i}"><b>R${i+1}</b><span>D0 pin ${p[0]} · D1 pin ${p[1]}</span></div>`).join('');
-  document.querySelectorAll('.rd').forEach(el=>el.onclick=()=>{const i=+el.dataset.r;S.readers[i]=S.readers[i]?0:1;update();});
-  document.querySelector('[data-k="sched.reader"]').innerHTML=readerOpts(S.sched.reader,false);
-}
-function bindTable(tbl,arr,fields){
-  tbl.querySelectorAll('[data-i]').forEach(el=>{
-    const i=+el.dataset.i,f=el.dataset.f;
-    el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{
-      let v=el.value; if(fields[f]==='num')v=v===''?'':Number(v);
-      arr[i][f]=v; update(false,true);
-    });
-  });
-  tbl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{arr.splice(+b.dataset.del,1);update();});
-}
-function buildEdgeTable(){
-  const E=S.sched.edges;
-  $('edgeTable').innerHTML='<tr><th>Days</th><th>Time</th><th></th></tr>'+E.map((e,i)=>`<tr>
-    <td><select data-i="${i}" data-f="day">${DAYOPTS.map(o=>`<option value="${o[0]}" ${e.day===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></td>
-    <td><input type="time" data-i="${i}" data-f="time" value="${esc(e.time)}"></td>
-    <td><button class="x" data-del="${i}" title="Remove">×</button></td></tr>`).join('');
-  bindTable($('edgeTable'),E,{day:'str',time:'str'});
-}
-function buildSchedCards(){
-  const C=S.sched.cards;
-  $('schedCardTable').innerHTML='<tr><th>FC</th><th>Card</th><th>Label (Group)</th><th></th></tr>'+C.map((c,i)=>`<tr>
-    <td style="width:70px"><input type="number" data-i="${i}" data-f="fc" value="${c.fc}"></td>
-    <td style="width:90px"><input type="number" data-i="${i}" data-f="card" value="${c.card}"></td>
-    <td><input type="text" maxlength="16" data-i="${i}" data-f="label" value="${esc(c.label)}"></td>
-    <td><button class="x" data-del="${i}" title="Remove">×</button></td></tr>`).join('');
-  bindTable($('schedCardTable'),C,{fc:'num',card:'num',label:'str'});
-}
-$('addEdge').onclick=()=>{S.sched.edges.push({day:"wd",time:"12:00"});update();};
-$('addSchedCard').onclick=()=>{S.sched.cards.push({fc:185,card:1000,label:""});update();};
-$('schedDbCards').onclick=()=>{S.sched.cards=DB_CARDS.map(c=>({fc:c[0],card:c[1],label:c[2]}));update();};
-
-function steps(){return S.seq[S.mode];}
-function buildSteps(){
-  const T=steps();const pinMode=S.mode==='pin';
-  $('stepTable').innerHTML=`<tr><th>#</th><th>Reader</th><th>FC</th><th>Card</th>${pinMode?'<th>PIN</th>':''}<th>Then wait (s)</th><th>Expect</th><th>Note</th><th></th></tr>`+T.map((s,i)=>`<tr>
-    <td>${i+1}</td>
-    <td style="min-width:130px"><select data-i="${i}" data-f="r">${readerOpts(s.r,true)}</select></td>
-    <td style="width:62px"><input type="number" data-i="${i}" data-f="fc" value="${s.fc}" ${+s.r===255?'disabled':''}></td>
-    <td style="width:78px"><input type="number" data-i="${i}" data-f="card" value="${s.card}" ${+s.r===255?'disabled':''}></td>
-    ${pinMode?`<td style="width:70px"><input type="text" maxlength="8" data-i="${i}" data-f="pin" value="${esc(s.pin)}" ${+s.r===255?'disabled':''}></td>`:''}
-    <td style="width:66px"><input type="number" step="0.5" min="0" data-i="${i}" data-f="wait" value="${s.wait}"></td>
-    <td style="width:92px"><select data-i="${i}" data-f="exp">${[["G","Grant"],["D","Deny"],["?","Depends"],["-","—"]].map(o=>`<option value="${o[0]}" ${s.exp===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></td>
-    <td style="min-width:150px"><input type="text" maxlength="32" data-i="${i}" data-f="note" value="${esc(s.note)}"></td>
-    <td><button class="x" data-del="${i}" title="Remove">×</button></td></tr>`).join('');
-  bindTable($('stepTable'),T,{r:'num',fc:'num',card:'num',pin:'str',wait:'num',exp:'str',note:'str'});
-  $('stepTable').querySelectorAll('select[data-f="r"]').forEach(el=>el.addEventListener('change',()=>update()));
-  const tp=SEQ_TEMPLATES[S.mode];
-  $('seqTemplates').innerHTML=Object.entries(tp).map(([k,t])=>`<button data-tpl="${k}">${esc(t.name)}</button>`).join('')+'<button data-tpl="_clear">Blank</button>';
-  $('seqTemplates').querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.tpl==='_clear'){S.seq[S.mode]=[{r:0,fc:185,card:1020,pin:"",wait:3,exp:"G",note:""}];$('seqTemplateNote').textContent='';}
-    else{const t=tp[b.dataset.tpl];S.seq[S.mode]=JSON.parse(JSON.stringify(t.steps));$('seqTemplateNote').textContent=t.note;}
-    update();});
-  if(!$('seqTemplateNote').dataset.mode||$('seqTemplateNote').dataset.mode!==S.mode){$('seqTemplateNote').dataset.mode=S.mode;$('seqTemplateNote').textContent='Pick a template to start from, then edit the steps.';}
-  $('labelInputs').innerHTML=S.seq.labels.map((l,i)=>`<div><label>R${i+1} (pins ${PINS[i][0]}/${PINS[i][1]})</label><input type="text" maxlength="16" data-li="${i}" value="${esc(l)}"></div>`).join('');
-  $('labelInputs').querySelectorAll('[data-li]').forEach(el=>el.addEventListener('input',()=>{S.seq.labels[+el.dataset.li]=el.value;update(false,true);}));
-}
-$('addStep').onclick=()=>{const T=steps();const last=T[T.length-1]||{r:0,fc:185,card:1020,pin:"",wait:3,exp:"G",note:""};T.push({...last,note:""});update();};
-
-/* ---------------------------------------------------------------- calc helpers */
-const bitsN=()=>S.fmt==='26'?26:34;
-const frameMs=()=>bitsN()*(S.pulse+S.interval)/1000;
-const keyMs=()=>(S.seq.pinFmt==='8'?8:4)*(S.pulse+S.interval)/1000;
-const avgDelay=()=>S.delayMode==='fixed'?S.delayFixed:(S.delayMin+S.delayMax)/2;
-const fcMaxV=()=>S.fmt==='26'?255:65535;
-const edgeDays=d=>d==='all'?[0,1,2,3,4,5,6]:d==='wd'?[1,2,3,4,5]:d==='we'?[0,6]:[+d];
-const edgeCode=d=>({all:7,wd:8,we:9})[d]??+d;
-const hasCard=s=>s.card!==''&&s.card!==null&&s.card!==undefined;
-function stepMs(s){
-  if(+s.r===255)return s.wait*1000;
-  let t=0;if(hasCard(s))t+=frameMs();
-  if(S.mode==='pin'&&s.pin){if(hasCard(s))t+=S.seq.cardPinGapMs;const n=s.pin.length+(S.seq.endHash?1:0);t+=n*(keyMs()+S.seq.keyGapMs);}
-  return t+s.wait*1000;
-}
-function fmtDur(s){if(!isFinite(s))return'forever';if(s<60)return s.toFixed(0)+' s';if(s<3600)return(s/60).toFixed(1)+' min';return(s/3600).toFixed(1)+' h';}
-
-/* ---------------------------------------------------------------- validation */
-function validate(){
-  const m=[];const fm=fcMaxV();
-  if(S.pulse<20||S.pulse>200)m.push(['warn','Pulse width outside 20–200 µs may not be read by the panel.']);
-  if(S.interval<200||S.interval>16000)m.push(['bad','Bit interval must be 200–16000 µs.']);
-  else if(S.interval<500||S.interval>3000)m.push(['warn','Bit interval outside 0.5–3 ms is unusual; some panels may reject it.']);
-  if(S.fmt==='34')m.push(['warn','34-bit: set the panel reader ports to a 34-bit Wiegand format, and import cards with the matching facility code.']);
-  const okCard=c=>Number.isInteger(c)&&c>=0&&c<=65535, okFc=f=>Number.isInteger(f)&&f>=0&&f<=fm;
-  if(S.mode==='load'){
-    const nR=S.readers.filter(Boolean).length;
-    if(!nR)m.push(['bad','Turn on at least one reader.']);
-    if(S.cardMode!=='static'){if(S.cardMin>S.cardMax)m.push(['bad','Card "From" is higher than "To".']);if(!okCard(S.cardMax)||!okCard(S.cardMin))m.push(['bad','Card numbers must be 0–65535.']);}
-    else if(!okCard(S.cardStatic))m.push(['bad','Card number must be 0–65535.']);
-    if(S.fcMode==='fixed'){if(!okFc(S.fcFixed))m.push(['bad',`Facility code must be 0–${fm} for ${S.fmt}-bit.`]);}
-    else{if(S.fcMin>S.fcMax)m.push(['bad','Facility "From" is higher than "To".']);if(!okFc(S.fcMax)||!okFc(S.fcMin))m.push(['bad',`Facility code must be 0–${fm} for ${S.fmt}-bit.`]);}
-    if(S.delayMode==='random'&&S.delayMin>S.delayMax)m.push(['bad','Delay min is higher than max.']);
-    if(avgDelay()<50&&S.log!=='0'&&S.baud<57600)m.push(['warn','Fast swipes with a slow serial baud can slow the loop. Use 115200 or turn logging off.']);
-    if(S.readerMode==='all'&&nR>1)m.push(['ok',`"Same card to all" sends each card to ${nR} readers, with the delay between each.`]);
-  }
-  if(S.mode==='sched'){
-    const P=S.sched;
-    if(!P.edges.length)m.push(['bad','Add at least one schedule time.']);
-    if(P.edges.length>12)m.push(['bad','Up to 12 schedule times.']);
-    if(P.edges.some(e=>!/^\d\d:\d\d$/.test(e.time)))m.push(['bad','Every schedule time needs a time.']);
-    if(!P.cards.length)m.push(['bad','Add at least one test card.']);
-    if(P.cards.length>12)m.push(['bad','Up to 12 test cards.']);
-    if(P.cards.some(c=>!okCard(c.card)||!okFc(c.fc)))m.push(['bad',`Test cards need a card 0–65535 and FC 0–${fm}.`]);
-    if(!(P.everySec>=1))m.push(['bad','"Swipe every" must be at least 1 s.']);
-    if(!(P.windowMin>=0))m.push(['bad','Window must be 0 or more minutes.']);
-    const sweep=P.cards.length*(frameMs()+P.cardGapMs);
-    if(sweep>=P.everySec*1000)m.push(['bad',`One round of ${P.cards.length} cards takes ${(sweep/1000).toFixed(1)} s, longer than "Swipe every". Raise "Swipe every" or shorten the gap between cards.`]);
-    const mins=P.edges.map(e=>{const[h,mm]=e.time.split(':').map(Number);return h*60+mm;}).sort((a,b)=>a-b);
-    for(let i=1;i<mins.length;i++)if(mins[i]-mins[i-1]<2*P.windowMin&&mins[i]!==mins[i-1]){m.push(['warn','Some schedule times are closer together than the two windows; where windows overlap, only the earlier time is swiped.']);break;}
-  }
-  if(S.mode==='apb'||S.mode==='pin'){
-    const T=steps();
-    if(!T.length)m.push(['bad','Add at least one step.']);
-    if(T.length>40)m.push(['bad','Up to 40 steps.']);
-    T.forEach((s,i)=>{
-      if(+s.r===255){if(!(s.wait>0))m.push(['warn',`Step ${i+1}: a wait-only step with no wait does nothing.`]);return;}
-      if(hasCard(s)&&(!okCard(s.card)||!okFc(s.fc)))m.push(['bad',`Step ${i+1}: card must be 0–65535 and FC 0–${fm}.`]);
-      if(S.mode==='pin'&&s.pin&&!/^[0-9*#]{1,8}$/.test(s.pin))m.push(['bad',`Step ${i+1}: PIN can only use 0–9, * and #, up to 8 keys.`]);
-      if(!hasCard(s)&&!(S.mode==='pin'&&s.pin))m.push(['bad',`Step ${i+1}: needs a card${S.mode==='pin'?' or a PIN':''}, or set the reader to "Wait only".`]);
-      if(!(s.wait>=0))m.push(['bad',`Step ${i+1}: wait must be 0 or more seconds.`]);
-    });
-    if(S.mode==='pin')m.push(['warn','Confirm the keypad format Qumulex expects for this door (4-bit or 8-bit burst) and match it here. PINs have to be added in Qumulex by hand; the importer has no PIN column.']);
-    if(S.mode==='apb')m.push(['warn','Anti-passback needs In and Out readers set on the door in Qumulex. Results marked "Depends" vary with the anti-passback type (hard, soft, timed, area).']);
-  }
-  if(!m.some(x=>x[0]==='bad'))m.unshift(['ok','Settings are valid.']);
-  return m;
-}
-
-/* ---------------------------------------------------------------- previews */
-function frameBits(fc,card){
-  const fb=S.fmt==='26'?8:16, half=(fb+16)/2;
-  const fcBits=(fc>>>0).toString(2).padStart(fb,'0').slice(-fb), cBits=(card>>>0).toString(2).padStart(16,'0').slice(-16);
-  const data=fcBits+cBits; const cnt=s=>[...s].filter(c=>c==='1').length;
-  const even=cnt(data.slice(0,half))%2, odd=cnt(data.slice(half))%2===0?1:0;
-  return `<span class="p">${even}</span> <span class="f">${fcBits}</span> <span class="c">${cBits}</span> <span class="p">${odd}</span>`;
-}
-function keyBits(c){const k=c==='*'?10:c==='#'?11:+c;const b=k.toString(2).padStart(4,'0');return S.seq.pinFmt==='8'?((~k)&15).toString(2).padStart(4,'0')+' '+b:b;}
-function sampleFrame(){
-  let fc,card;
-  if(S.mode==='load'){card=S.cardMode==='static'?S.cardStatic:S.cardMin;fc=S.fcMode==='fixed'?S.fcFixed:S.fcMin;}
-  else if(S.mode==='sched'){const c=S.sched.cards[0]||{fc:185,card:1000};fc=c.fc;card=c.card;}
-  else{const s=steps().find(x=>+x.r!==255&&hasCard(x))||{fc:185,card:1000};fc=s.fc;card=s.card;}
-  $('frameLabel').textContent=`FC ${fc}, card ${card} (${S.fmt}-bit)`;
-  $('frameBits').innerHTML=frameBits(fc,card);
-  if(S.mode==='pin'){const s=steps().find(x=>x.pin)||{pin:'1234'};
-    $('pinFrame').innerHTML=`PIN ${esc(s.pin)}${S.seq.endHash?'#':''} as ${S.seq.pinFmt}-bit bursts: <span class="bits">${[...(s.pin+(S.seq.endHash?'#':''))].map(keyBits).join(' · ')}</span>`;}
-  else $('pinFrame').innerHTML='';
-}
-function dbCoverage(){
-  const DB=[[1000,1018,"M-F 8-5 (expiry not imported)"],[1019,1098,"M-F 8-5"],[1099,1118,"M-F 8-5 (expiry not imported)"],[1119,1499,"M-F 8-5"],[1500,1749,"M-F ALT"],[1751,1950,"WEEKEND"],[1951,1955,"Master (expiry not imported)"],[1956,1969,"Master"],[1970,1980,"Unauthorized (no Group)"]];
-  const fcOk=S.fcMode==='fixed'&&S.fcFixed===185&&S.fmt==='26';
-  if(!fcOk){$('dbBox').innerHTML='<div class="mutedtxt">The test database is all FC 185, 26-bit. With these settings no card will match it, so every read should be an unknown-card event.</div>';return;}
-  let lo,hi;if(S.cardMode==='static'){lo=hi=S.cardStatic;}else{lo=S.cardMin;hi=S.cardMax;}
-  if(lo>hi){$('dbBox').innerHTML='';return;}
-  const total=hi-lo+1;const rows=[];let inDb=0;
-  DB.forEach(([a,b,n])=>{const c=Math.max(0,Math.min(b,hi)-Math.max(a,lo)+1);if(c){rows.push([n,`${Math.max(a,lo)}–${Math.min(b,hi)}`,c]);inDb+=c;}});
-  const unk=total-inDb;if(unk)rows.push(['Not in database (unknown card)','e.g. 1750, 1981+',unk]);
-  $('dbBox').innerHTML=`<table><tr><th>Imported group</th><th>Cards</th><th>Share of swipes</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${(100*r[2]/total).toFixed(1)}%</td></tr>`).join('')}</table><div class="hint">Assumes the Qumulex import file from this test database. Expiry dates aren't imported, so those cards will be granted unless you set expiry by hand. Granted vs denied also depends on the Group schedules and time of day.</div>`;
-}
-function loadStats(){
-  const nR=Math.max(1,S.readers.filter(Boolean).length);
-  const per=frameMs()+avgDelay(); const rate=1000/per;
-  $('sRate').textContent=rate>=10?rate.toFixed(0):rate.toFixed(2);
-  const perReader=rate*60/nR;
-  $('sPer').textContent=perReader>=10?perReader.toFixed(0):perReader.toFixed(1);
-  const swipes=S.maxReads>0?(S.readerMode==='all'?S.maxReads*nR:S.maxReads):Infinity;
-  $('sRun').textContent=fmtDur(swipes*per/1000);
-  $('readerHint').textContent={random:'Each swipe goes to a random enabled reader.',rr:'Swipes rotate through the enabled readers in order.',all:'Each card is sent to every enabled reader in turn. "Stop after" counts cards, not swipes.'}[S.readerMode];
-}
-function schedPlan(){
-  const P=S.sched;const W=P.windowMin*60, N=Math.max(1,P.everySec);
-  const rounds=Math.floor(2*W/N)+1;
-  const offs=[];for(let o=-W;o<=W;o+=N)offs.push(o);
-  const fo=o=>(o<0?'−':o>0?'+':'±')+Math.floor(Math.abs(o)/60)+':'+pad2(Math.abs(o)%60);
-  const edges=P.edges.filter(e=>/^\d\d:\d\d$/.test(e.time));
-  const perWeek=edges.reduce((a,e)=>a+edgeDays(e.day).length,0);
-  $('schedPlan').innerHTML=`<table><tr><th>Schedule time</th><th>Swiping from</th><th>to</th></tr>${edges.map(e=>{const[h,mm]=e.time.split(':').map(Number);const t=h*3600+mm*60;const f=s=>{s=((s%86400)+86400)%86400;return pad2(Math.floor(s/3600))+':'+pad2(Math.floor(s/60)%60)+':'+pad2(s%60);};return `<tr><td>${DAYOPTS.find(o=>o[0]===e.day)[1]} ${e.time}</td><td>${f(t-W)}</td><td>${f(t+W)}</td></tr>`;}).join('')}</table>
-  <div class="hint" style="margin-top:8px">${rounds} rounds per edge × ${P.cards.length} cards = ${rounds*P.cards.length} swipes per edge, ${perWeek} edges a week, on reader R${+P.reader+1}. Rounds at ${offs.length>9?offs.slice(0,4).map(fo).join(', ')+' … '+offs.slice(-2).map(fo).join(', '):offs.map(fo).join(', ')}.</div>
-  <div class="hint">Each log line shows the Uno's time, how far it is from the schedule time, and the card, so you can line it up with the Qumulex event log.</div>`;
-}
-function seqPlan(){
-  const T=steps();let t=0;
-  const tag=e=>({G:'<span class="tag g">Grant</span>',D:'<span class="tag d">Deny</span>','?':'<span class="tag q">Depends</span>','-':'<span class="tag n">—</span>'})[e];
-  const rows=T.map((s,i)=>{const start=t;t+=stepMs(s)/1000;
-    const what=+s.r===255?`<i>wait ${s.wait} s</i>`:[hasCard(s)?`${s.fc}-${s.card}`:'',S.mode==='pin'&&s.pin?`PIN ${esc(s.pin)}${S.seq.endHash?'#':''}`:''].filter(Boolean).join(' + ');
-    return `<tr><td>${i+1}</td><td>${start.toFixed(1)} s</td><td>${+s.r===255?'—':'R'+(+s.r+1)+' · '+esc(S.seq.labels[+s.r])}</td><td>${what}</td><td>${tag(s.exp)}</td><td>${esc(s.note)}</td></tr>`;}).join('');
-  const reps=S.seq.repeat>0?S.seq.repeat:Infinity;
-  $('seqPlan').innerHTML=`<table><tr><th>#</th><th>At</th><th>Reader</th><th>Sends</th><th>Expect</th><th>Note</th></tr>${rows}</table>
-    <div class="hint" style="margin-top:8px">One run takes about ${t.toFixed(1)} s. ${S.seq.start==='go'?'Each run starts when you send <b>g</b> in the Serial Monitor.':'Starts 1 s after power-up.'} Runs: ${isFinite(reps)?reps:'forever'}.</div>`;
-  $('runGapBox').classList.toggle('hide',S.seq.start==='go');
-}
-function wiring(){
-  let used=[];
-  if(S.mode==='load')used=S.readers.map((r,i)=>r?i:-1).filter(i=>i>=0);
-  else if(S.mode==='sched')used=[+S.sched.reader];
-  else used=[...new Set(steps().filter(s=>+s.r!==255).map(s=>+s.r))].sort();
-  $('wiring').innerHTML='<tr><th>Reader</th><th>Uno pin → panel D0 (green)</th><th>Uno pin → panel D1 (white)</th></tr>'+used.map(i=>`<tr><td>R${i+1}${S.mode==='apb'||S.mode==='pin'?' · '+esc(S.seq.labels[i]):''}</td><td>${PINS[i][0]}</td><td>${PINS[i][1]}</td></tr>`).join('')+'<tr><td>All</td><td colspan="2">Uno GND → panel reader GND</td></tr>';
-}
-
-/* ---------------------------------------------------------------- code generation */
-function header(title,extra){
-  return `/*
-  Wiegand Swipe Simulator - ${title}
-  Arduino Uno + ScrewShield 1.0
-  Generated by the Wiegand Simulator Config Tool on ${new Date().toISOString().slice(0,10)}
-  Based on Larry's 4ReadersAutomationStaticCard sketch (Rosslare).
-
-  Pins: R1 D0=2 D1=3 | R2 D0=4 D1=5 | R3 D0=6 D1=7 | R4 D0=8 D1=9
-  Tie Uno GND to the panel's reader ground.${extra?'\n\n'+extra:''}
-*/
-`;
-}
-function sharedSettings(logLevel){
-  return `// Card format: 26 = H10301 (8-bit FC, 16-bit card), 34 = 16-bit FC, 16-bit card
-#define WIEGAND_BITS ${S.fmt}
-
-// Wiegand timing
-const unsigned int PULSE_US        = ${S.pulse};     // low pulse width
-const unsigned int BIT_INTERVAL_US = ${S.interval};   // time between bits (max 16000)
-
-// Serial log: 0 = off, 1 = basic, 2 = verbose (adds frame bits)
-#define LOG_LEVEL ${logLevel}
-const long SERIAL_BAUD = ${S.baud};
-`;
-}
-const CORE=`const uint8_t D0_PINS[4] = { 2, 4, 6, 8 };   // DATA0 (green)
-const uint8_t D1_PINS[4] = { 3, 5, 7, 9 };   // DATA1 (white)
-
-uint8_t countBits(uint32_t v, uint8_t from, uint8_t n) {
-  uint8_t c = 0;
-  for (uint8_t i = 0; i < n; i++) if ((v >> (from + i)) & 1UL) c++;
-  return c;
-}
-
-void sendBit(uint8_t r, bool one) {
-  uint8_t pin = one ? D1_PINS[r] : D0_PINS[r];
-  digitalWrite(pin, LOW);
-  delayMicroseconds(PULSE_US);
-  digitalWrite(pin, HIGH);
-  delayMicroseconds(BIT_INTERVAL_US);
-}
-
-// Sends: even parity, facility code, card number, odd parity (MSB first)
-void sendCard(uint8_t r, uint16_t fc, uint16_t card) {
-#if WIEGAND_BITS == 26
-  const uint8_t DATA_BITS = 24;
-  uint32_t data = ((uint32_t)(fc & 0xFF) << 16) | card;
-#else
-  const uint8_t DATA_BITS = 32;
-  uint32_t data = ((uint32_t)fc << 16) | card;
-#endif
-  const uint8_t half = DATA_BITS / 2;
-  bool even = countBits(data, half, half) & 1;    // makes upper half + parity even
-  bool odd  = !(countBits(data, 0, half) & 1);    // makes lower half + parity odd
-
-  sendBit(r, even);
-  for (int8_t i = DATA_BITS - 1; i >= 0; i--) sendBit(r, (data >> i) & 1UL);
-  sendBit(r, odd);
-
-#if LOG_LEVEL >= 2
-  Serial.print(F("   bits: "));
-  Serial.print(even);
-  Serial.print(' ');
-  for (int8_t i = DATA_BITS - 1; i >= 0; i--) Serial.print((uint8_t)((data >> i) & 1UL));
-  Serial.print(' ');
-  Serial.println(odd);
-#endif
-}
-
-void initPins() {
-  for (uint8_t i = 0; i < 4; i++) {
-    pinMode(D0_PINS[i], OUTPUT); digitalWrite(D0_PINS[i], HIGH);   // Wiegand idle = high
-    pinMode(D1_PINS[i], OUTPUT); digitalWrite(D1_PINS[i], HIGH);
-  }
-}
-`;
-const SERIAL_IN=`// ---- Serial Monitor input (set line ending to "Newline") ----
-char lineBuf[32];
-uint8_t lineLen = 0;
-
-bool readLine() {
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\\r') continue;
-    if (c == '\\n') { lineBuf[lineLen] = 0; lineLen = 0; return true; }
-    if (lineLen < sizeof(lineBuf) - 1) lineBuf[lineLen++] = c;
-  }
-  return false;
-}
-`;
-
-function genLoad(){
-  const en=S.readers.map(r=>r?'true':'false').join(', ');
-  const cm={random:0,seq:1,static:2}[S.cardMode], rm={random:0,rr:1,all:2}[S.readerMode];
-  return header('Load / stress test')+`
-// ===================== SETTINGS =====================
-
-${sharedSettings(S.log)}
-// Readers to use (R1, R2, R3, R4)
-const bool READER_ENABLED[4] = { ${en} };
-
-// Which reader gets each swipe: 0 = random, 1 = round robin, 2 = same card to all readers in turn
-#define READER_MODE ${rm}
-
-// Card number: 0 = random in range, 1 = sequential through range, 2 = single card
-#define CARD_MODE ${cm}
-const uint16_t CARD_MIN    = ${S.cardMin};   // inclusive
-const uint16_t CARD_MAX    = ${S.cardMax};   // inclusive
-const uint16_t STATIC_CARD = ${S.cardStatic};
-
-// Facility code: 0 = fixed, 1 = random in range
-#define FC_MODE ${S.fcMode==='fixed'?0:1}
-const uint16_t FC_FIXED = ${S.fcFixed};
-const uint16_t FC_MIN   = ${S.fcMin};  // inclusive
-const uint16_t FC_MAX   = ${S.fcMax};  // inclusive
-
-// Time between swipes: 0 = fixed, 1 = random in range (milliseconds)
-#define DELAY_MODE ${S.delayMode==='fixed'?0:1}
-const unsigned long DELAY_FIXED_MS = ${S.delayFixed};
-const unsigned long DELAY_MIN_MS   = ${S.delayMin};
-const unsigned long DELAY_MAX_MS   = ${S.delayMax};
-
-// Stop after this many cards (0 = run forever)
-const unsigned long MAX_READS = ${S.maxReads};
-
-// Random seed: same seed = same sequence after every reset. 0 = seed from noise on A0.
-const unsigned long RANDOM_SEED = ${S.seed};
-
-// ====================================================
-
-${CORE}
-uint8_t enabledList[4];
-uint8_t enabledCount = 0;
-uint8_t rrIndex = 0;
-uint16_t seqCard = CARD_MIN;
-unsigned long readCount = 0;
-
-void logSwipe(uint8_t r, uint16_t fc, uint16_t card) {
-#if LOG_LEVEL >= 1
-  Serial.print(F("#"));
-  Serial.print(readCount);
-  Serial.print(F("  Reader: R"));
-  Serial.print(r + 1);
-  Serial.print(F("  Facility: "));
-  Serial.print(fc);
-  Serial.print(F("  Card: "));
-  Serial.println(card);
-#endif
-}
-
-unsigned long pickDelay() {
-  // A random number is always drawn so the card/reader sequence for a given seed
-  // stays the same whichever delay mode is used (matches Larry's original sketch).
-  unsigned long r = random(DELAY_MIN_MS, DELAY_MAX_MS + 1);
-#if DELAY_MODE == 0
-  return DELAY_FIXED_MS;
-#else
-  return r;
-#endif
-}
-
-uint16_t pickCard() {
-#if CARD_MODE == 0
-  return (uint16_t)random((long)CARD_MIN, (long)CARD_MAX + 1);
-#elif CARD_MODE == 1
-  uint16_t c = seqCard;
-  seqCard = (seqCard >= CARD_MAX) ? CARD_MIN : seqCard + 1;
-  return c;
-#else
-  return STATIC_CARD;
-#endif
-}
-
-uint16_t pickFacility() {
-#if FC_MODE == 0
-  return FC_FIXED;
-#else
-  return (uint16_t)random((long)FC_MIN, (long)FC_MAX + 1);
-#endif
-}
-
-void setup() {
-  Serial.begin(SERIAL_BAUD);
-  if (RANDOM_SEED == 0) randomSeed(analogRead(A0));
-  else randomSeed(RANDOM_SEED);
-
-  initPins();
-  for (uint8_t i = 0; i < 4; i++) if (READER_ENABLED[i]) enabledList[enabledCount++] = i;
-  delay(1000);
-
-#if LOG_LEVEL >= 1
-  Serial.println(F("---- Wiegand Swipe Simulator: load test ----"));
-  Serial.print(F("Format: ")); Serial.print(WIEGAND_BITS); Serial.println(F("-bit"));
-  Serial.print(F("Readers enabled: ")); Serial.println(enabledCount);
-#endif
-  if (enabledCount == 0) {
-    Serial.println(F("No readers enabled - stopping."));
-    while (true) {}
-  }
-}
-
-void loop() {
-  if (MAX_READS > 0 && readCount >= MAX_READS) {
-#if LOG_LEVEL >= 1
-    Serial.println(F("---- Done ----"));
-#endif
-    while (true) {}
-  }
-
-  // Order of random draws: reader, delay, card, facility
-#if READER_MODE == 0
-  uint8_t r = enabledList[random(0, enabledCount)];
-#elif READER_MODE == 1
-  uint8_t r = enabledList[rrIndex];
-  rrIndex = (rrIndex + 1) % enabledCount;
-#endif
-  unsigned long wait = pickDelay();
-  uint16_t card = pickCard();
-  uint16_t fc = pickFacility();
-  readCount++;
-
-#if READER_MODE == 2
-  for (uint8_t i = 0; i < enabledCount; i++) {
-    logSwipe(enabledList[i], fc, card);
-    sendCard(enabledList[i], fc, card);
-    delay(wait);
-  }
-#else
-  logSwipe(r, fc, card);
-  sendCard(r, fc, card);
-  delay(wait);
-#endif
-}
-`;
-}
-
-function genSched(){
-  const P=S.sched;
-  const edges=P.edges.map(e=>{const[h,m]=e.time.split(':').map(Number);return `  { ${edgeCode(e.day)}, ${h}, ${m} },   // ${DAYOPTS.find(o=>o[0]===e.day)[1]} ${e.time}`;}).join('\n');
-  const cards=P.cards.map(c=>`  { ${c.fc}, ${c.card}, "${cstr(c.label).slice(0,16)}" },`).join('\n');
-  return header('Schedule edge test',`How to use:
-  1. Upload, then open the Serial Monitor at ${S.baud} baud, line ending "Newline".
-  2. Send the clock line from the config tool, e.g.  T Fri 16:55:00
-     (or  T 16:55:00  to keep the day). Opening the Serial Monitor resets the
-     Uno, so always send the clock line after opening it.
-  3. Around each schedule time below, every test card is swiped on a fixed beat.
-  The Uno's clock can drift several seconds an hour: re-send the clock line
-  shortly before an important edge.`)+`
-// ===================== SETTINGS =====================
-
-${sharedSettings(Math.max(1,+S.log))}
-// Reader the test cards are swiped on (0 = R1 ... 3 = R4)
-const uint8_t READER = ${+P.reader};
-
-// Swipe from WINDOW_SEC before to WINDOW_SEC after each schedule time,
-// once every SWEEP_EVERY_SEC, with CARD_GAP_MS between test cards.
-const long WINDOW_SEC          = ${Math.round(P.windowMin*60)}L;
-const long SWEEP_EVERY_SEC     = ${Math.round(P.everySec)}L;
-const unsigned long CARD_GAP_MS = ${P.cardGapMs};
-
-// Schedule times. Day: 0 = Sun ... 6 = Sat, 7 = every day, 8 = Mon-Fri, 9 = Sat-Sun
-struct Edge { uint8_t day; uint8_t hh; uint8_t mm; };
-const Edge EDGES[] PROGMEM = {
-${edges}
+function showRunDesc(){const t=TESTS[$('runTest').value];$('runDesc').textContent=t?(t.description||t.type):'';}
+function showTest(){const n=$('tSel').value;$('tName').value=n;const t={...TESTS[n]};$('tJson').value=JSON.stringify(t,null,2);}
+$('runTest').onchange=showRunDesc;
+$('tSel').onchange=showTest;
+async function loadTests(){TESTS=await api('/api/tests');fillTestSelects();renderJobs();}
+$('runBtn').onclick=async()=>{
+  try{await api('/api/run',{method:'POST',body:JSON.stringify({test:$('runTest').value,duration_min:$('runDur').value||null})});msg('runMsg','Started.');refreshStatus();}
+  catch(e){msg('runMsg',e.message,false);}
 };
-const uint8_t EDGE_COUNT = sizeof(EDGES) / sizeof(EDGES[0]);
-
-// Test cards: facility code, card number, label for the log
-struct TestCard { uint16_t fc; uint16_t card; char label[17]; };
-const TestCard CARDS[] PROGMEM = {
-${cards}
+async function saveTest(name){
+  let t;try{t=JSON.parse($('tJson').value);}catch(e){return msg('tMsg','JSON error: '+e.message,false);}
+  if(!name)return msg('tMsg','Give the test a name.',false);
+  try{await api('/api/tests/'+encodeURIComponent(name),{method:'PUT',body:JSON.stringify(t)});await loadTests();$('tSel').value=name;showTest();msg('tMsg','Saved.');}
+  catch(e){msg('tMsg',e.message,false);}
+}
+$('tSave').onclick=async()=>{
+  const old=$('tSel').value,name=$('tName').value.trim();
+  await saveTest(name);
+  if(name&&name!==old&&TESTS[name]){await api('/api/tests/'+encodeURIComponent(old),{method:'DELETE'});await loadTests();$('tSel').value=name;showTest();}
 };
-const uint8_t CARD_COUNT = sizeof(CARDS) / sizeof(CARDS[0]);
+$('tNew').onclick=()=>{let n=$('tName').value.trim()+' copy';while(TESTS[n])n+=' 2';$('tName').value=n;saveTest(n);};
+$('tDel').onclick=async()=>{const n=$('tSel').value;if(!n)return;$('tDel').textContent==='Click again to delete'?(await api('/api/tests/'+encodeURIComponent(n),{method:'DELETE'}),$('tDel').textContent='Delete',await loadTests(),msg('tMsg','Deleted '+n)):($('tDel').textContent='Click again to delete',setTimeout(()=>$('tDel').textContent='Delete',3000));};
+$('tReset').onclick=async()=>{await api('/api/tests/reset-defaults',{method:'POST'});await loadTests();msg('tMsg','Built-in tests restored (your own tests were kept).');};
 
-// ====================================================
-
-${CORE}
-${SERIAL_IN}
-const long DAY_SEC  = 86400L;
-const long WEEK_SEC = 604800L;
-const char DAY_NAMES[] PROGMEM = "SunMonTueWedThuFriSat";
-
-bool synced = false;
-long baseSec = 0;              // seconds since Sunday 00:00 at the moment of sync
-unsigned long baseMillis = 0;
-long lastSec = -1;
-unsigned long lastReminder = 0;
-
-long nowSec() {
-  return (baseSec + (long)((millis() - baseMillis) / 1000UL)) % WEEK_SEC;
+/* jobs */
+function renderJobs(){
+  const testOpts=sel=>Object.keys(TESTS).map(n=>`<option ${n===sel?'selected':''}>${esc(n)}</option>`).join('');
+  $('jobs').innerHTML='<tr><th>On</th><th>Name</th><th>Test</th><th>Days</th><th>Start</th><th>Minutes</th><th></th></tr>'+JOBS.map((j,i)=>`<tr>
+    <td><input type="checkbox" data-i="${i}" data-f="enabled" ${j.enabled!==false?'checked':''}></td>
+    <td><input type="text" data-i="${i}" data-f="name" value="${esc(j.name)}"></td>
+    <td><select data-i="${i}" data-f="test">${testOpts(j.test)}</select></td>
+    <td><select data-i="${i}" data-f="days">${DAYS.map(d=>`<option value="${d[0]}" ${d[0]===j.days?'selected':''}>${d[1]}</option>`).join('')}</select></td>
+    <td style="width:100px"><input type="time" data-i="${i}" data-f="start" value="${esc(j.start)}"></td>
+    <td style="width:80px"><input type="number" min="0" data-i="${i}" data-f="duration_min" value="${j.duration_min??''}"></td>
+    <td><button class="x" data-del="${i}">×</button></td></tr>`).join('');
+  $('jobs').querySelectorAll('[data-i]').forEach(el=>el.addEventListener(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',()=>{
+    const j=JOBS[+el.dataset.i],f=el.dataset.f;j[f]=el.type==='checkbox'?el.checked:f==='duration_min'?(el.value===''?null:Number(el.value)):el.value;}));
+  $('jobs').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{JOBS.splice(+b.dataset.del,1);renderJobs();});
 }
+$('jAdd').onclick=()=>{JOBS.push({name:'Nightly stress',test:Object.keys(TESTS)[0],days:'all',start:'02:00',duration_min:60,enabled:true});renderJobs();};
+$('jSave').onclick=async()=>{try{await api('/api/jobs',{method:'POST',body:JSON.stringify(JOBS)});JOBS=await api('/api/jobs');renderJobs();msg('jMsg','Schedule saved.');}catch(e){msg('jMsg',e.message,false);}};
 
-void print2(long v) { if (v < 10) Serial.print('0'); Serial.print(v); }
-
-void printDay(uint8_t d) {
-  for (uint8_t k = 0; k < 3; k++) Serial.print((char)pgm_read_byte(DAY_NAMES + d * 3 + k));
-}
-
-void printTime(long s) {
-  printDay(s / DAY_SEC);
-  Serial.print(' ');
-  print2((s % DAY_SEC) / 3600); Serial.print(':');
-  print2((s % 3600) / 60);      Serial.print(':');
-  print2(s % 60);
-}
-
-// Accepts "T Fri 16:55:00", "T Fri 16:55", "T 16:55:00" (keeps the current day)
-bool parseSync(const char* s) {
-  if (s[0] != 'T' && s[0] != 't') return false;
-  s++;
-  while (*s == ' ') s++;
-  int day = -1;
-  if (isalpha(*s)) {
-    for (uint8_t d = 0; d < 7; d++) {
-      bool match = true;
-      for (uint8_t k = 0; k < 3; k++)
-        if (tolower(s[k]) != tolower(pgm_read_byte(DAY_NAMES + d * 3 + k))) match = false;
-      if (match) { day = d; break; }
-    }
-    if (day < 0) return false;
-    s += 3;
-    while (*s == ' ') s++;
-  }
-  int h = 0, m = 0, sec = 0;
-  int n = sscanf(s, "%d:%d:%d", &h, &m, &sec);
-  if (n < 2 || h > 23 || m > 59 || sec > 59) return false;
-  if (n == 2) sec = 0;
-  if (day < 0) {
-    if (!synced) return false;            // first sync needs the day
-    day = nowSec() / DAY_SEC;
-  }
-  baseSec = day * DAY_SEC + h * 3600L + m * 60L + sec;
-  baseMillis = millis();
-  synced = true;
-  lastSec = -1;
-  return true;
-}
-
-bool dayMatches(uint8_t rule, uint8_t d) {
-  if (rule == 7) return true;
-  if (rule == 8) return d >= 1 && d <= 5;
-  if (rule == 9) return d == 0 || d == 6;
-  return rule == d;
-}
-
-void sweep(long now, long diff, long edgeSec) {
-  for (uint8_t i = 0; i < CARD_COUNT; i++) {
-    TestCard c;
-    memcpy_P(&c, &CARDS[i], sizeof(TestCard));
-    printTime(nowSec());
-    Serial.print(F("  ("));
-    Serial.print(diff < 0 ? '-' : '+');
-    long a = diff < 0 ? -diff : diff;
-    Serial.print(a / 60); Serial.print(':'); print2(a % 60);
-    Serial.print(F(" from "));
-    printTime(edgeSec);
-    Serial.print(F(")  R")); Serial.print(READER + 1);
-    Serial.print(F("  ")); Serial.print(c.fc); Serial.print('-'); Serial.print(c.card);
-    Serial.print(F("  [")); Serial.print(c.label); Serial.println(']');
-    sendCard(READER, c.fc, c.card);
-    if (i < CARD_COUNT - 1) delay(CARD_GAP_MS);
-  }
-}
-
-void setup() {
-  Serial.begin(SERIAL_BAUD);
-  initPins();
-  delay(1000);
-  Serial.println(F("---- Wiegand Swipe Simulator: schedule edge test ----"));
-  Serial.println(F("Send the clock line, e.g.  T Fri 16:55:00"));
-}
-
-void loop() {
-  if (readLine()) {
-    if (parseSync(lineBuf)) {
-      Serial.print(F("Clock set: ")); printTime(nowSec()); Serial.println();
-    } else if (lineBuf[0]) {
-      Serial.println(F("Not understood. Send e.g.  T Fri 16:55:00"));
-    }
-  }
-
-  if (!synced) {
-    if (millis() - lastReminder > 15000UL) {
-      lastReminder = millis();
-      Serial.println(F("Waiting for clock line, e.g.  T Fri 16:55:00"));
-    }
-    return;
-  }
-
-  long now = nowSec();
-  if (now == lastSec) return;
-  lastSec = now;
-
-  if (now % 600 == 0) { Serial.print(F("Clock: ")); printTime(now); Serial.println(); }
-
-  for (uint8_t e = 0; e < EDGE_COUNT; e++) {
-    Edge ed;
-    memcpy_P(&ed, &EDGES[e], sizeof(Edge));
-    for (uint8_t d = 0; d < 7; d++) {
-      if (!dayMatches(ed.day, d)) continue;
-      long edgeSec = d * DAY_SEC + ed.hh * 3600L + ed.mm * 60L;
-      long diff = now - edgeSec;
-      if (diff >  WEEK_SEC / 2) diff -= WEEK_SEC;
-      if (diff < -WEEK_SEC / 2) diff += WEEK_SEC;
-      if (diff >= -WINDOW_SEC && diff <= WINDOW_SEC && ((diff + WINDOW_SEC) % SWEEP_EVERY_SEC) == 0) {
-        sweep(now, diff, edgeSec);
-        return;                      // one sweep per second, even if windows overlap
-      }
-    }
-  }
-}
-`;
-}
-
-function genSeq(){
-  const T=steps();const isPin=S.mode==='pin';
-  const expCode={G:1,D:2,'?':3,'-':0};
-  const rows=T.map((s,i)=>{const wait=+s.r===255;const hc=!wait&&hasCard(s);
-    return `  { ${wait?255:+s.r}, ${hc?1:0}, ${hc?s.fc:0}, ${hc?s.card:0}, "${wait||!isPin?'':cstr(s.pin)}", ${Math.round((+s.wait||0)*1000)}UL, ${expCode[s.exp]}, "${cstr(s.note).slice(0,32)}" },`;}).join('\n');
-  const labels=S.seq.labels.map((l,i)=>`    case ${i}: Serial.print(F("R${i+1} (${cstr(l).slice(0,16)})")); break;`).join('\n');
-  const title=isPin?'Card + PIN test':'Anti-passback test';
-  return header(title,`How to use:
-  1. Upload, then open the Serial Monitor at ${S.baud} baud, line ending "Newline".
-  2. ${S.seq.start==='go'?'Send  g  to start a run.':'The sequence starts automatically.'}
-  3. Each step prints what was sent and the expected result. Compare with the
-     Qumulex event log.`)+`
-// ===================== SETTINGS =====================
-
-${sharedSettings(Math.max(1,+S.log))}${isPin?`
-// Keypad output: 4 = 4-bit burst per key, 8 = 8-bit burst (complement + key)
-#define PIN_FORMAT ${S.seq.pinFmt}
-const unsigned long CARD_PIN_GAP_MS = ${S.seq.cardPinGapMs};   // card to first key
-const unsigned long KEY_GAP_MS      = ${S.seq.keyGapMs};    // between keys
-#define PIN_END_HASH ${S.seq.endHash?1:0}                       // 1 = send # after each PIN
-`:''}
-// Start: 1 = wait for "g" in the Serial Monitor before each run, 0 = start automatically
-#define WAIT_FOR_GO ${S.seq.start==='go'?1:0}
-const unsigned long REPEAT     = ${S.seq.repeat};      // runs, 0 = forever
-const unsigned long RUN_GAP_MS = ${Math.round(S.seq.runGapSec*1000)}UL;  // between runs when starting automatically
-
-// Steps: reader (0-3, 255 = wait only), has card, FC, card, PIN, wait after (ms),
-//        expected (0 = none, 1 = grant, 2 = deny, 3 = depends), note
-struct Step {
-  uint8_t reader;
-  uint8_t hasCard;
-  uint16_t fc;
-  uint16_t card;
-  char pin[9];
-  uint32_t waitMs;
-  uint8_t expect;
-  char note[33];
+/* quick swipe */
+function readerOpts(){return [1,2,3,4].map(r=>`<option value="${r}">R${r} · ${esc((CFG.reader_labels||[])[r-1]||'')}</option>`).join('');}
+$('qBtn').onclick=async()=>{
+  $('qBtn').disabled=true;
+  try{const r=await api('/api/swipe',{method:'POST',body:JSON.stringify({reader:$('qReader').value,format:$('qFmt').value,fc:$('qFc').value,card:$('qCard').value,pin:$('qPin').value,pin_format:$('qPinFmt').value})});
+    msg('qMsg','Sent'+(r.row.card!==''?` ${r.row.fc}-${r.row.card}`:'')+(r.row.pin?` PIN ${r.row.pin}`:'')+` on R${r.row.reader}.`);}
+  catch(e){msg('qMsg',e.message,false);}
+  $('qBtn').disabled=false;
 };
-const Step STEPS[] PROGMEM = {
-${rows}
+
+/* logs */
+async function loadLogFiles(){
+  const files=await api('/api/logs');
+  $('logFiles').innerHTML='<tr><th>File</th><th>Modified</th><th>Size</th></tr>'+(files.length?files.map(f=>`<tr><td><a href="/logs/${encodeURIComponent(f.name)}">${esc(f.name)}</a></td><td>${esc(f.modified.replace('T',' '))}</td><td>${(f.size/1024).toFixed(1)} KB</td></tr>`).join(''):'<tr><td colspan="3" class="hint">No logs yet.</td></tr>');
+}
+
+/* settings */
+function renderSettings(){
+  $('labels').innerHTML=[0,1,2,3].map(i=>`<div><label>R${i+1} (pins ${2+2*i}/${3+2*i})</label><input type="text" maxlength="24" data-l="${i}" value="${esc((CFG.reader_labels||[])[i]||'')}"></div>`).join('');
+  $('sPulse').value=CFG.pulse_us;$('sInt').value=CFG.interval_us;
+  $('fbOn').checked=!!CFG.feedback?.enabled;$('fbWin').value=CFG.feedback?.window_ms??3000;
+  $('fbMap').innerHTML=[0,1,2,3].map(i=>`<div><label>R${i+1}</label><select data-m="${i}">${[1,2,3,4].map(n=>`<option value="${n}" ${(CFG.feedback?.reader_inputs||[1,1,2,2])[i]==n?'selected':''}>A${n-1}</option>`).join('')}</select></div>`).join('');
+  $('qReader').innerHTML=readerOpts();
+}
+$('sSave').onclick=async()=>{
+  const body={reader_labels:[...document.querySelectorAll('[data-l]')].map(e=>e.value),pulse_us:+$('sPulse').value,interval_us:+$('sInt').value,
+    feedback:{enabled:$('fbOn').checked,window_ms:+$('fbWin').value,reader_inputs:[...document.querySelectorAll('[data-m]')].map(e=>+e.value)}};
+  try{await api('/api/config',{method:'POST',body:JSON.stringify(body)});CFG=await api('/api/config');renderSettings();msg('sMsg','Settings saved.');}
+  catch(e){msg('sMsg',e.message,false);}
 };
-const uint8_t STEP_COUNT = sizeof(STEPS) / sizeof(STEPS[0]);
 
-// ====================================================
-
-${CORE}
-${SERIAL_IN}${isPin?`
-uint8_t keyCode(char c) {
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c == '*') return 10;
-  return 11;                                  // '#'
-}
-
-void sendKey(uint8_t r, uint8_t k) {
-#if PIN_FORMAT == 8
-  for (int8_t i = 3; i >= 0; i--) sendBit(r, ((~k) >> i) & 1);   // complement first
-#endif
-  for (int8_t i = 3; i >= 0; i--) sendBit(r, (k >> i) & 1);
-}
-
-void sendPin(uint8_t r, const char* pin) {
-  for (uint8_t i = 0; pin[i]; i++) {
-    sendKey(r, keyCode(pin[i]));
-    delay(KEY_GAP_MS);
-  }
-#if PIN_END_HASH
-  sendKey(r, 11);
-  delay(KEY_GAP_MS);
-#endif
-}
-`:''}
-unsigned long runCount = 0;
-
-void printReader(uint8_t r) {
-  switch (r) {
-${labels}
-  }
-}
-
-void printExpect(uint8_t e) {
-  switch (e) {
-    case 1: Serial.print(F("GRANT")); break;
-    case 2: Serial.print(F("DENY")); break;
-    case 3: Serial.print(F("DEPENDS")); break;
-    default: Serial.print(F("-")); break;
-  }
-}
-
-void runSequence() {
-  for (uint8_t i = 0; i < STEP_COUNT; i++) {
-    Step s;
-    memcpy_P(&s, &STEPS[i], sizeof(Step));
-    Serial.print(F("Step ")); Serial.print(i + 1); Serial.print('/'); Serial.print(STEP_COUNT);
-    Serial.print(F("  t=")); Serial.print(millis() / 1000.0, 1); Serial.print(F("s  "));
-    if (s.reader == 255) {
-      Serial.print(F("Wait ")); Serial.print(s.waitMs / 1000.0, 1); Serial.print(F(" s"));
-    } else {
-      printReader(s.reader);
-      if (s.hasCard) { Serial.print(F("  Card ")); Serial.print(s.fc); Serial.print('-'); Serial.print(s.card); }
-      if (s.pin[0])  { Serial.print(F("  PIN ")); Serial.print(s.pin); }
-      Serial.print(F("  Expect: ")); printExpect(s.expect);
-    }
-    if (s.note[0]) { Serial.print(F("  - ")); Serial.print(s.note); }
-    Serial.println();
-
-    if (s.reader != 255) {
-      if (s.hasCard) sendCard(s.reader, s.fc, s.card);${isPin?`
-      if (s.pin[0]) {
-        if (s.hasCard) delay(CARD_PIN_GAP_MS);
-        sendPin(s.reader, s.pin);
-      }`:''}
-    }
-    delay(s.waitMs);
-  }
-}
-
-void setup() {
-  Serial.begin(SERIAL_BAUD);
-  initPins();
-  delay(1000);
-  Serial.println(F("---- Wiegand Swipe Simulator: ${title.toLowerCase()} ----"));
-}
-
-void loop() {
-  if (REPEAT > 0 && runCount >= REPEAT) {
-    Serial.println(F("---- Done ----"));
-    while (true) {}
-  }
-#if WAIT_FOR_GO
-  Serial.println(F("Send g to start the run."));
-  while (true) {
-    if (readLine() && (lineBuf[0] == 'g' || lineBuf[0] == 'G')) break;
-  }
-#endif
-  runCount++;
-  Serial.print(F("==== Run ")); Serial.print(runCount); Serial.println(F(" ===="));
-  runSequence();
-  Serial.println(F("==== End of run ===="));
-#if !WAIT_FOR_GO
-  delay(RUN_GAP_MS);
-#endif
-}
-`;
-}
-
-/* ---------------------------------------------------------------- sync clock */
-function syncText(){const d=new Date();return `T ${DAYS[d.getDay()]} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;}
-setInterval(()=>{if(S.mode==='sched')$('syncLine').textContent=syncText();},250);
-$('copySync').onclick=async()=>{const t=syncText();try{await navigator.clipboard.writeText(t);$('copySync').textContent='Copied';}catch(e){$('copySync').textContent='Select & copy';const r=document.createRange();r.selectNodeContents($('syncLine'));const s=getSelection();s.removeAllRanges();s.addRange(r);}setTimeout(()=>$('copySync').textContent='Copy',1500);};
-
-/* ---------------------------------------------------------------- update */
-function update(resync=true,skipTables=false){
-  if(resync)syncInputs(); else document.querySelectorAll('[data-for]').forEach(el=>el.classList.toggle('hide',!el.dataset.for.split(' ').includes(S.mode)));
-  buildReaders();
-  if(!skipTables){
-    if(S.mode==='sched'){buildEdgeTable();buildSchedCards();}
-    if(S.mode==='apb'||S.mode==='pin')buildSteps();
-  }
-  $('delayFixedBox').classList.toggle('hide',S.delayMode!=='fixed');
-  $('delayRandBox').classList.toggle('hide',S.delayMode==='fixed');
-  $('cardRangeBox').classList.toggle('hide',S.cardMode==='static');
-  $('cardStaticBox').classList.toggle('hide',S.cardMode!=='static');
-  $('fcFixedBox').classList.toggle('hide',S.fcMode!=='fixed');
-  $('fcRandBox').classList.toggle('hide',S.fcMode==='fixed');
-  const m=validate();
-  $('msgs').innerHTML=m.map(x=>`<div class="${x[0]}">${x[1]}</div>`).join('');
-  const bad=m.some(x=>x[0]==='bad');
-  wiring();sampleFrame();
-  if(S.mode==='load'){loadStats();dbCoverage();}
-  if(S.mode==='sched'){schedPlan();$('syncLine').textContent=syncText();}
-  if(S.mode==='apb'||S.mode==='pin')seqPlan();
-  $('code').textContent=bad?'// Fix the settings marked in red to generate the sketch.':(S.mode==='load'?genLoad():S.mode==='sched'?genSched():genSeq());
-  $('copyBtn').disabled=bad;
-  try{localStorage.setItem('wiegandCfg2',JSON.stringify(S));}catch(e){}
-}
-$('copyBtn').onclick=async()=>{
-  try{await navigator.clipboard.writeText($('code').textContent);$('copyBtn').textContent='Copied';}
-  catch(e){const r=document.createRange();r.selectNodeContents($('code'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('copyBtn').textContent='Selected — press Ctrl+C';}
-  setTimeout(()=>$('copyBtn').textContent='Copy sketch',2000);
-};
-update();
+(async()=>{
+  CFG=await api('/api/config');renderSettings();
+  JOBS=await api('/api/jobs');
+  await loadTests();
+  refreshStatus();startStream();
+})();
 </script>
 </body>
 </html>

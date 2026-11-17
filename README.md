@@ -1,36 +1,133 @@
-# Wiegand Swipe Simulator — Config Tool
+# Wiegand Simulator — Raspberry Pi controller
 
-A browser tool that generates Arduino sketches for simulating Wiegand card reads into an access control panel (tested design target: Rosslare AC-825IP on Qumulex). Open `index.html` in a browser, pick a test, and copy the generated sketch into the Arduino IDE.
+Run the Arduino Wiegand swipe simulator from anywhere. The Uno stays wired to the panel exactly as before and plugs into a Raspberry Pi by USB. The Pi runs the tests, keeps the time, runs scheduled tests, logs every swipe, and serves a web dashboard.
 
-Based on Larry's `4ReadersAutomationStaticCard` sketch from the Rosslare support team.
+```
+ Your PC / phone ── Tailscale ──► Raspberry Pi ── USB ──► Arduino Uno + ScrewShield ── D0/D1 ──► AC-825IP
+                                  (dashboard,               (wiegand-agent firmware:
+                                   schedule, logs)            puts pulses on the wires)
+```
 
-## Hardware
+## Parts
 
-- Arduino Uno + ScrewShield 1.0
-- Up to 4 simulated readers
+| Item | Notes |
+|---|---|
+| Raspberry Pi 4 Model B (2 GB is plenty) or Pi 5 | A Pi Zero 2 W also works, but needs a micro-USB OTG adapter for the Uno cable |
+| Official Pi power supply | USB-C 15 W (Pi 4) or 27 W (Pi 5) |
+| microSD card, 16–32 GB | |
+| USB A-to-B cable | The one you already use for the Uno |
+| Network | Ethernet is most reliable; Wi-Fi is fine |
 
-| Reader | D0 (green) | D1 (white) |
-|---|---|---|
-| R1 | Pin 2 | Pin 3 |
-| R2 | Pin 4 | Pin 5 |
-| R3 | Pin 6 | Pin 7 |
-| R4 | Pin 8 | Pin 9 |
+## 1. Prepare the SD card (on your PC)
 
-Tie Uno GND to the panel's reader ground. Uno pins drive 5 V / 0 V directly; check the panel's D0/D1 idle voltage before connecting, and add a buffer if it is above 5 V.
+1. Install **Raspberry Pi Imager** from raspberrypi.com/software.
+2. Choose your Pi model, then **Raspberry Pi OS Lite (64-bit)**, then the SD card.
+3. Click **Edit settings** (or Next → Edit settings) and set:
+   - Hostname: `wiegand-sim`
+   - User name and password (remember these)
+   - Wi-Fi network and country, if not using Ethernet
+   - Time zone: `America/Indiana/Indianapolis` (schedules use the Pi's local time)
+   - Services tab: **Enable SSH**, use password authentication
+4. Write the card, put it in the Pi, connect network and power. Give it 2 minutes on the first boot.
 
-## Test modes
+## 2. Connect to the Pi
 
-- **Load / stress** — random or sequential swipes at a set rate across the readers. Presets: Larry's original, Normal (1–2 s), Stress (10–50 ms), Walk every card, One card to all readers.
-- **Schedule edges** — swipes a set of test cards on a fixed beat before and after each schedule start/end time, to check that access changes at the right minute. The Uno has no clock: send a clock line (`T Fri 16:55:00`) in the Serial Monitor after opening it. The tool shows the current line to copy.
-- **Anti-passback** — scripted In/Out sequences (single door, two doors/area, timed APB, several cards) with the expected result printed for each step.
-- **Card + PIN** — card then keypad PIN as 4-bit or 8-bit bursts (correct/wrong PIN, card only, PIN only, lockout, duress).
+From Windows Terminal or PowerShell on a PC on the same network:
 
-Shared settings: 26-bit (H10301) or 34-bit format, pulse width, bit interval, serial baud and log level.
+```
+ssh <your-user>@wiegand-sim.local
+```
 
-## Notes
+## 3. Install the controller
 
-- Serial Monitor line ending must be **Newline** for the schedule and sequence modes.
-- Opening the Serial Monitor resets the Uno.
-- The Uno's timing can drift several seconds an hour; re-send the clock line before an important schedule edge.
-- PINs and expiry dates are not imported by the Qumulex cardholder importer; set them in Qumulex by hand for the related tests.
-- Confirm the keypad format (4-bit or 8-bit burst) Qumulex expects for the door.
+```
+sudo apt-get install -y git
+git clone https://github.com/qxr-repository/wiegand-swipe-simulator.git
+cd wiegand-swipe-simulator/pi
+bash install.sh
+```
+
+## 4. Load the firmware onto the Uno
+
+Plug the Uno into the Pi by USB, then:
+
+```
+bash flash-uno.sh
+```
+
+This replaces Larry's sketch with the `wiegand-agent` firmware, which takes commands from the Pi. (You can also open `wiegand-agent/wiegand-agent.ino` in the Arduino IDE on a PC and upload it there.)
+
+Open `http://wiegand-sim.local:8080` in a browser on the same network. The top bar should show **Uno connected (fw 1.0)**.
+
+## 5. Reach it from anywhere (Tailscale)
+
+Don't forward ports on the router: this box can make doors unlock. Use Tailscale, a free private network between your own devices.
+
+```
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+```
+
+Open the link it prints and sign in. Install Tailscale on your PC and phone with the same account. Then the dashboard is at `http://wiegand-sim:8080` from anywhere. Check with IT before putting it on a company network.
+
+## 6. Set a password (recommended)
+
+```
+bash set-password.sh
+```
+
+The user name is `admin`.
+
+## Using it
+
+- **Run**: pick a test, optionally a time limit, and Start. **Stop test** is always in the top bar.
+- **Quick swipe**: send one card and/or PIN on any reader, for remote troubleshooting.
+- **Tests**: edit the built-in tests or make your own (JSON, with a field reference on the page). Built in: Larry's original, Normal load, Stress, Soak (count check), Walk every card, Schedule edges (M-F 8-5), APB single door / two doors / timed, Card + PIN basics / lockout, Bad frames.
+- **Schedule**: start any test at set times and days, for a set number of minutes. For example, Stress at 02:00 for 60 minutes every night, or Schedule edges every weekday from 07:50 for 600 minutes.
+- **Logs**: one CSV per run (plus one per day for quick swipes), to compare with the Qumulex event log.
+- **Settings**: reader labels, Wiegand timing, automatic pass/fail.
+
+## Automatic pass/fail (optional)
+
+Wire each door's lock relay (dry contact: COM and NO) between an Uno input and GND:
+
+| Uno pin | Input |
+|---|---|
+| A0 | 1 |
+| A1 | 2 |
+| A2 | 3 |
+| A3 | 4 |
+
+Use only the relay's dry contacts, never the lock power. In **Settings**, turn on automatic pass/fail and pick which input belongs to each reader's door. Sequence and bad-frame steps that expect GRANT or DENY are then marked PASS or FAIL in the log, depending on whether the door unlocked within the wait time.
+
+## Updating
+
+```
+cd ~/wiegand-swipe-simulator/pi
+bash update.sh
+```
+
+Settings, tests, schedule and logs live in `pi/data/` and are kept.
+
+## Troubleshooting
+
+| Problem | Try |
+|---|---|
+| Dashboard won't load | `sudo systemctl status wiegand-sim` and `journalctl -u wiegand-sim -n 50` |
+| "No Uno found on USB" | Check the cable; `ls /dev/serial/by-id/` should list an Arduino |
+| "no reply to PING" | The Uno still has an old sketch: run `bash flash-uno.sh` |
+| Swipes sent but panel shows nothing | Common ground, D0/D1 not swapped, reader port set to Wiegand 26-bit |
+
+## Firmware commands (for reference)
+
+The Pi talks to the Uno at 115200 baud. Every command gets one `OK` or `ERR` reply.
+
+| Command | Does |
+|---|---|
+| `PING` | `OK PONG 1.0` |
+| `CFG <pulse_us> <interval_us>` | Set Wiegand timing |
+| `W <reader> <26\|34> <fc> <card>` | Send a card with correct parity |
+| `K <reader> <4\|8> <keys> <gap_ms>` | Send keypad keys (0–9 * #) |
+| `B <reader> <bits>` | Send a raw bit string (used for bad-frame tests) |
+| `IN` | Read the feedback inputs |
+| `EVT IN <n> <0\|1> <ms>` | Sent by the Uno when an input changes |
