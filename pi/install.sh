@@ -6,6 +6,11 @@ cd "$(dirname "$0")"
 DIR="$(pwd)"
 RUN_USER="${SUDO_USER:-$USER}"
 
+# If the repo was cloned as root (e.g. after "sudo su"), hand it to the service user,
+# otherwise the service can't create its data folder and exits on start.
+echo "==> Making sure $RUN_USER owns $(dirname "$DIR")"
+sudo chown -R "$RUN_USER": "$(dirname "$DIR")"
+
 echo "==> Installing Python packages"
 sudo apt-get update -q
 sudo apt-get install -y -q python3-flask python3-serial
